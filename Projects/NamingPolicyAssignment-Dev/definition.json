@@ -1,0 +1,61 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Network/privateEndpoints"
+        },
+        {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "value": "[substring(field('name'), sub(length(field('name')),4), 4)]",
+                  "notequals": "-swn"
+                },
+                {
+                  "field": "location",
+                  "equals": "switzerlandnorth"
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "value": "[substring(field('name'), sub(length(field('name')),4), 4)]",
+                  "notequals": "-usc"
+                },
+                {
+                  "field": "location",
+                  "equals": "southcentralus"
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "value": "[substring(field('name'), sub(length(field('name')),4), 4)]",
+                  "notequals": "-sea"
+                },
+                {
+                  "field": "location",
+                  "equals": "southeastasia"
+                }
+              ]
+            },
+            {
+              "value": "[substring(field('name'), 0, 3)]",
+              "notequals": "pe-"
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "deny"
+    }
+  },
+  "parameters": {}
+}
