@@ -1,27 +1,22 @@
-@allowed([
-  'swn'
-  'usc'
-])
+// This module deploys an App Service Plan (ASP) 
+
+// Importing necessary types
+import { OSType, regionType } from '.shared/commonTypes.bicep'
+
+// Parameters for the deployments
 param projectName string
-
-@allowed([
-  'P1V3'
-])
 param sku string
+param osType OSType
+param regionAbbreviation regionType
 
-@allowed([
-  'Windows'
-  'Linux'
-])
-param osType string
-
+// Variables for naming conventions
 var appServicePlanName = 'plan-${projectName}-${regionAbbreviation}'
 
-import { regionType } from '.shared/commonTypes.bicep'
-param regionAbbreviation regionType
+// Importing shared resources and configurations
 var locations = loadJsonContent('.shared/locations.json')
 var location = locations[regionAbbreviation].region
 
+// SKU Mapping Variable
 var skuMap = {
   P1V3: {
     tier: 'PremiumV3'
@@ -35,6 +30,8 @@ var skuMap = {
 
 var skuConfig = skuMap[sku]
 
+
+// ASP Deployment
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServicePlanName
   location: location

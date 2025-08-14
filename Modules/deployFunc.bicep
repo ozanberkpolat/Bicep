@@ -1,9 +1,10 @@
-param projectName string
+// This module deploys a Function App to an existing App Service Plan
 
-@allowed([
-  'swn'
-  'usc'
-])
+// Importing necessary types
+import { regionType, OSType } from '.shared/commonTypes.bicep'
+
+// Parameters for the deployments
+param projectName string
 param vNetName string
 param vNetRG string
 param peSubnetName string
@@ -11,12 +12,7 @@ param outboundSubnetID string
 param appServicePlanId string
 param storageAccountName string
 param storageAccountId string
-
-@allowed([
-  'Linux'
-  'Windows'
-])
-param osType string
+param osType OSType
 
 @allowed([
   'Dotnet'
@@ -24,14 +20,17 @@ param osType string
 ])
 param RuntimeStack string
 param RuntimeVersion string
-
-import { regionType } from '.shared/commonTypes.bicep'
 param regionAbbreviation regionType
+
+// Importing shared resources and configurations
 var locations = loadJsonContent('.shared/locations.json')
 var location = locations[regionAbbreviation].region
 
+// Variables for naming conventions
 var functionAppName = 'func-${projectName}-${regionAbbreviation}'
 var peName = 'pe-func-${projectName}-${regionAbbreviation}'
+
+// Other Variables
 var FunctionAppID = functionApp.id
 var kind = ((osType == 'Linux') ? 'functionapp,linux' : ((osType == 'Windows') ? 'functionapp' : ''))
 var reserved = ((osType == 'Linux') ? true : ((osType == 'Windows') ? false : null))
@@ -39,8 +38,7 @@ var linuxFxVersion = '${RuntimeStack}|${RuntimeVersion}'
 var PeSubnetID = 'subscriptions/${subscription().subscriptionId}/resourceGroups/${vNetRG}/providers/Microsoft.Network/virtualNetworks/${vNetName}/subnets/${peSubnetName}'
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
-
-
+// Deploy FUnction App
 resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: functionAppName
   location: location

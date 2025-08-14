@@ -1,5 +1,10 @@
-targetScope = 'subscription'
-param regionAbbreviation string
+// This module deploys Data Bricks Workspace and it's dependent resources such as Private and Public subnets and a managed RG
+
+// Importing necessary types
+import { regionType } from '.shared/commonTypes.bicep'
+
+// Parameters for the deployments
+param regionAbbreviation regionType
 param PrivateSubnetName string 
 param PublicSubnetName string 
 param PrivateSubnetAddressSpace string
@@ -11,14 +16,15 @@ param Owner string
 param CostCenter string
 param dataResourceGroup string
 
+// Importing shared resources and configurations
 var PrivateDNSZones = json(loadTextContent('.shared/privatednszones.json'))
 var PEServices = loadJsonContent('.shared/pe_services.json')
 var locations = loadJsonContent('.shared/locations.json')
 var location = locations[regionAbbreviation].region
 
+// Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
-  scope: subscription(subscriptionId)
   params: {
     projectName: projectName
     regionAbbreviation: regionAbbreviation
@@ -26,21 +32,25 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+// Discover existing vNet
 resource Existing_VNET 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   name: 'vnet-${projectName}-swn'
   scope: resourceGroup(VNETRG)
 }
+
 
 resource Existing_routeTable 'Microsoft.Network/routeTables@2024-07-01' existing = {
   name: 'rt-vnet-${projectName}-swn'
   scope: resourceGroup(VNETRG)
 }
 
+// Discover existing subnet
 resource Existing_PESubnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' existing = {
   parent: Existing_VNET
   name: 'sn-${projectName}-pe-swn'
 }
 
+// Create managed resource group
 module Create_DataRG 'br/public:avm/res/resources/resource-group:0.4.1' = {
   scope: subscription(subscriptionId)
   name: dataResourceGroup
@@ -54,6 +64,7 @@ module Create_DataRG 'br/public:avm/res/resources/resource-group:0.4.1' = {
   }  
 }
 
+// Create an empty NSG for DBW
 module Create_NSG 'br/public:avm/res/network/network-security-group:0.5.1' = {
   name: 'NSG'
   scope: resourceGroup(dataResourceGroup)
@@ -66,6 +77,7 @@ module Create_NSG 'br/public:avm/res/network/network-security-group:0.5.1' = {
   ]
 }
 
+// Create Private subnet for DBW
 module Create_DWHPrivateSubnet 'br/public:avm/res/network/virtual-network/subnet:0.1.2' = {
   scope: resourceGroup(VNETRG)
   name: 'DWHPrivateSubnet'
@@ -79,6 +91,7 @@ module Create_DWHPrivateSubnet 'br/public:avm/res/network/virtual-network/subnet
   }
 }
 
+// Create Public subnet for DBW
 module Create_DWHPublicSubnet 'br/public:avm/res/network/virtual-network/subnet:0.1.2' = {
   scope: resourceGroup(VNETRG)
   name: 'DWHPublicSubnet'
@@ -95,6 +108,7 @@ module Create_DWHPublicSubnet 'br/public:avm/res/network/virtual-network/subnet:
   ]
 }
 
+// Create Data Bricks Workspace
 module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
   scope: resourceGroup(dataResourceGroup)
   name: 'DBW_Prod'

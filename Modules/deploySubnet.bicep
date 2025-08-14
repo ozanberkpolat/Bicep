@@ -1,108 +1,51 @@
+// This module deploys a subnet into an existing Vnet
+
+//Importing necessary types
+import { regionType } from '.shared/commonTypes.bicep'
+
+// Parameters for the deployments
 param vNetName string
 param subnetDescription string
 param subnetAddressSpace string
 param vNetAddressSpace string
-
-
-import { regionType } from '.shared/commonTypes.bicep'
+param subscriptionName string
+param projectName string
 param regionAbbreviation regionType
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
 
-
+// Variables for naming conventions
 var vNetShortName = split(vNetName, '-')[1]
 var SubNetFullName = 'sn-${vNetShortName}-${subnetDescription}-${regionAbbreviation}'
-var routeTableName = 'rt-${vNetName}'
-var nsgName = 'nsg-${SubNetFullName}'
-var allOnPremCIDR = '10.0.0.0/8'
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
-  name: nsgName
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'Allow_All_InsideSubnet'
-        properties: {
-          priority: 4093
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: subnetAddressSpace
-          destinationAddressPrefix: subnetAddressSpace
-        }
-      }
-      {
-        name: 'Deny_All_FromOtherSubnetsInVnet'
-        properties: {
-          priority: 4094
-          direction: 'Inbound'
-          access: 'Deny'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: vNetAddressSpace
-          destinationAddressPrefix: subnetAddressSpace
-        }
-      }
-      {
-        name: 'Allow_All_FromOnPremAndOtherVnets'
-        properties: {
-          priority: 4095
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: allOnPremCIDR
-          destinationAddressPrefix: subnetAddressSpace
-        }
-      }
-      {
-        name: 'Deny_All_Inbound'
-        properties: {
-          priority: 4096
-          direction: 'Inbound'
-          access: 'Deny'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ]
+// Deploy NSG for the Subnet
+module NSG 'deployNSG.bicep' = {
+  params: {
+    projectName: projectName
+    regionAbbreviation: regionAbbreviation
+    subnetAddressSpace: subnetAddressSpace
+    subscriptionName: subscriptionName
+    vNetAddressSpace: vNetAddressSpace
   }
 }
 
-resource routeTable 'Microsoft.Network/routeTables@2023-11-01' = {
-  name: routeTableName
-  location: location
-  properties: {
-    routes: [
-      {
-        name: 'Traffic_to_LB'
-        properties: {
-          addressPrefix: '0.0.0.0/0'
-          nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: locations[regionAbbreviation].nextHopIp
-        }
-      }
-    ]
+//Deploy Route Table for the subnet
+module routeTable 'deployRouteTable.bicep' = {
+  params: {
+    projectName: projectName
+    regionAbbreviation: regionAbbreviation
+    vNetName: vNetName
   }
 }
 
+// Deploy subnet
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' = {
   name: '${vNetName}/${SubNetFullName}'
   properties: {
     addressPrefix: subnetAddressSpace
     networkSecurityGroup: {
-      id: nsg.id
+      id: NSG.outputs.NSGID
     }
     routeTable: {
-      id: routeTable.id
+      id: routeTable.outputs.routeTableId
     }
     privateEndpointNetworkPolicies: 'Enabled'
     privateLinkServiceNetworkPolicies: 'Enabled'
@@ -110,6 +53,6 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' = {
 }
 
 output subnetId string = subnet.id
-output nsgId string = nsg.id
-output routeTableId string = routeTable.id
+output nsgId string = NSG.outputs.NSGID
+output routeTableId string = routeTable.outputs.routeTableId
 output outboundSubnetName string = SubNetFullName

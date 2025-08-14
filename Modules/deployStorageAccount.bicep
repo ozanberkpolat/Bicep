@@ -1,9 +1,13 @@
+// This module deploys a Storage Account with the private endpoints of the services your choice
+// Importing necessary types
+import { regionType, storageAccountKind } from '.shared/commonTypes.bicep'
+
+// Parameters for the deployments
 @maxLength(18)
 param projectName string
 param vNetName string
 param vNetRG string
 param peSubnetName string
-param subscriptionId string
 
 @minLength(1)
 param serviceEndpoints array = [
@@ -13,37 +17,24 @@ param serviceEndpoints array = [
   'queue'
 ]
 
-import { regionType } from '.shared/commonTypes.bicep'
 param regionAbbreviation regionType
-
-import { storageAccountKind } from '.shared/commonTypes.bicep'
 param SAKind storageAccountKind = 'StorageV2' // Default to StorageV2
 
-
+// Importing shared resources and configurations
 var locations = loadJsonContent('.shared/locations.json')
 var location = locations[regionAbbreviation].region
+var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
-module naming '.shared/naming_conventions.bicep' = {
-  name: 'naming'
-  scope: subscription(subscriptionId)
-  params: {
-    projectName: projectName
-    regionAbbreviation: regionAbbreviation
-    subscriptionName: subscription().displayName
-  }
-}
 
 // Variables
 var storageAccountName = 'gun${projectName}${regionAbbreviation}'
 var subnetId = 'subscriptions/${subscription().subscriptionId}/resourceGroups/${vNetRG}/providers/Microsoft.Network/virtualNetworks/${vNetName}/subnets/${peSubnetName}'
-var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 var groupIds = {
   blob: 'blob'
   file: 'file'
   table: 'table'
   queue: 'queue'
 }
-
 var endpointNames = {
   blob: 'pe-${storageAccountName}-blob-${regionAbbreviation}'
   file: 'pe-${storageAccountName}-file-${regionAbbreviation}'
@@ -51,6 +42,7 @@ var endpointNames = {
   queue: 'pe-${storageAccountName}-queue-${regionAbbreviation}'
 }
 
+// Deploy Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-04-01' = {
   name: storageAccountName
   location: location
@@ -92,6 +84,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-04-01' = {
 }
 var StorageAccountID string = storageAccount.id
 
+// Configure Blob Retention 
 resource storageAccountName_default 'Microsoft.Storage/storageAccounts/blobServices@2023-04-01' = {
   parent: storageAccount
   name: 'default'
@@ -111,6 +104,7 @@ resource storageAccountName_default 'Microsoft.Storage/storageAccounts/blobServi
   }
 }
 
+// Configure File Retention
 resource Microsoft_Storage_storageAccounts_fileServices_storageAccountName_default 'Microsoft.Storage/storageAccounts/fileServices@2023-04-01' = if (SAKind == 'FileStorage' || SAKind == 'StorageV2') {
   parent: storageAccount
   name: 'default'
@@ -128,7 +122,7 @@ resource Microsoft_Storage_storageAccounts_fileServices_storageAccountName_defau
   }
 }
 
-// Private endpoints
+// Deploy Private Endpoints
 resource privateEndpoints 'Microsoft.Network/privateEndpoints@2023-11-01' = [for svc in serviceEndpoints: {
   name: endpointNames[svc]
   location: location
@@ -159,7 +153,7 @@ resource privateEndpoints 'Microsoft.Network/privateEndpoints@2023-11-01' = [for
   }
 }]
 
-// Private DNS zone groups
+// Private DNS zone config
 resource privateDnsZoneGroups 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = [for (svc, i) in serviceEndpoints: {
   parent: privateEndpoints[i]
   name: 'default'

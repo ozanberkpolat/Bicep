@@ -1,28 +1,22 @@
-// Required parameters
-import { regionType } from '.shared/commonTypes.bicep'
+// This module deploys a Virtual Machine
+
+//Importing necessary types
+import { regionType, OSType, vmSizeType } from '.shared/commonTypes.bicep'
+
+// Parameters for the deployments
 param regionAbbreviation regionType
 param VMName string
 param subnetName string
 param vNetRG string
 param vNetName string
-
-// Importing OS type
-import {OSType} from '.shared/commonTypes.bicep'
 param TypeofOS OSType
-
-// Importing VM size type
-import {vmSizeType} from '.shared/commonTypes.bicep'
 param SizeOfVM vmSizeType
 
-// Locations Module
+// Importing shared resources and configurations
 var locations = loadJsonContent('.shared/locations.json')
 var location = locations[regionAbbreviation].region
-
-// VM Size and OS Mapping
 var vmSize = loadJsonContent('.shared/vmSizes.json')
 var vmSizeValue = vmSize[SizeOfVM]
-
-// OS Mapping
 var OSMapping = loadJsonContent('.shared/VM_OS.json')
 var OS = OSMapping[TypeofOS]
 

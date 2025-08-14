@@ -1,27 +1,26 @@
-@allowed([
-  'swn'
-  'usc'
-  ''
-])
+// This module deploys a KeyVault with Private Endpoint
 
+// Importing necessary types
 import { regionType } from '.shared/commonTypes.bicep'
-param regionAbbreviation regionType
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
 
+// Parameters for the deployments
+param regionAbbreviation regionType
 param projectName string
 param vNetName string
 param vNetRG string
 param peSubnetName string
 
-// Variables
+
+// Variables 
+var locations = loadJsonContent('.shared/locations.json')
+var location = locations[regionAbbreviation].region
 var kvName = 'kv-${projectName}-${regionAbbreviation}'
 var peName = 'pe-kv-${projectName}-${regionAbbreviation}'
 var kvID = resourceId('Microsoft.KeyVault/vaults', kvName)
 var subnetId = 'subscriptions/${subscription().subscriptionId}/resourceGroups/${vNetRG}/providers/Microsoft.Network/virtualNetworks/${vNetName}/subnets/${peSubnetName}'
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
-// Key Vault
+// Deploy Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2021-10-01' = {
   name: kvName
   location: location

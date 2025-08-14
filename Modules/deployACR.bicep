@@ -1,37 +1,37 @@
+// This module deploys an Azure Container Registry (ACR) with private endpoint connectivity
+
+// Importing necessary types
 import { regionType } from '.shared/commonTypes.bicep'
 
-@description('The Azure region where the resources will be deployed. This should match the region defined in the locations.json file.')
+// Parameters for the deployments
 param regionAbbreviation regionType
-
-@description('Tags to be applied to the resources, used for management and categorization.')
-param tags object
-
-@description('Description for the Azure Container Registry, used in naming conventions.')
 param projectName string
 
-@description('Name of the resource group where the virtual network is located.')
+// Variables for naming conventions
 var vnetRGName = 'rg-vnet-${projectName}-${regionAbbreviation}'
-@description('Name of the virtual network where the Azure Container Registry will be deployed.')
 var vnetName = 'vnet-${projectName}-${regionAbbreviation}'
-@description('Name of the subnet within the virtual network where the Azure Container Registry will be deployed.')
 var subnetName = 'sn-${projectName}-pe-${regionAbbreviation}' 
-
 var acrName = 'cr${projectName}${regionAbbreviation}'
 
+// Loading shared resources and configurations
 var locations = loadJsonContent('.shared/locations.json')
 var location = locations[regionAbbreviation].region
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
+// Discovering existing vNet
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
   name: vnetName
   scope: resourceGroup(vnetRGName)
 }
 
+// Discovering existing subnet
+// This subnet is expected to be located in the vNet defined above
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
   name: subnetName
   parent: vnet
 }
 
+// Azure Container Registry deployment
 module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
   name: 'acrDeployment-${acrName}'
   params: {
@@ -62,6 +62,5 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
     softDeletePolicyDays: 7
     trustPolicyStatus: 'enabled'
     
-    tags: tags
   }
 }

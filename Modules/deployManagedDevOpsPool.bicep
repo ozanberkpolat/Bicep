@@ -1,5 +1,9 @@
-import { regionType } from '.shared/commonTypes.bicep'
-import { OSType } from '.shared/commonTypes.bicep'
+// This module deploys Managed DevOps Pool
+
+// Importing necessary types
+import { regionType, OSType } from '.shared/commonTypes.bicep'
+
+// Parameters for the deployments
 param projectName string
 param regionAbbreviation regionType
 param NumberOfAgents int
@@ -9,19 +13,17 @@ param VMSize string
 param OS OSType
 param ProjectID string
 
-var subscriptionId = subscription().id
+// Importing shared resources and configurations
 var locations = loadJsonContent('.shared/locations.json')
 var location = locations[regionAbbreviation].region
-
 var skuMap = loadJsonContent('.shared/vmSizes.json')
 var selectedSku = skuMap[VMSize]
-
 var osMAP = loadJsonContent('.shared/MDP_OS.json')
 var selectedOS = osMAP[OS]
 
+// Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
-  scope: subscription(subscriptionId)
   params: {
     projectName: projectName
     regionAbbreviation: regionAbbreviation
@@ -29,7 +31,7 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
-
+// Deploy Managed DevOps Pool
 module Create_MDP 'br/public:avm/res/dev-ops-infrastructure/pool:0.7.0' = {
   params: {
     name: naming.outputs.ManagedDevOpsPoolName
