@@ -30,3 +30,31 @@ type vmSizeType = 'small' | 'medium' | 'large' | 'xlarge' | '2xlarge' | '4xlarge
 
 @export()
 type storageAccountKind = 'StorageV2' | 'BlobStorage' | 'FileStorage'
+
+@export()
+type regionDefinitionType = {
+  name: string
+  region: string
+  nextHopIp: string
+  dnsServers: string[]
+  firewall: {
+    external: string
+    internal: string
+  }
+}
+
+@export()
+func getLocation(region regionType) regionDefinitionType => {
+  name: region
+  region: region == 'swn' ? 'switzerlandnorth' 
+        : region == 'usc' ? 'southcentralus' 
+        : region == 'weu'  ? 'westeurope' 
+        : region == 'sea' ? 'southeastasia'  
+        : 'unknown'
+  nextHopIp: 'NEXT-HOP-IP'
+  dnsServers: region == 'usc' ? ['USC-DNS-1', 'USC-DNS-2'] : ['RoW-DNS-1', 'RoW-DNS-2']
+  firewall: {
+    external: '/subscriptions/SUBSCRIPTION-NAME-HERE/resourceGroups/rg-fortigate_ext-${region}/providers/Microsoft.Network/virtualNetworks/vnet-fortigate_ext-${region}'
+    internal: '/subscriptions/SUBSCRIPTION-NAME-HERE/resourceGroups/rg-fortigate_int-${region}/providers/Microsoft.Network/virtualNetworks/vnet-fortigate_int-${region}'
+  }
+}
