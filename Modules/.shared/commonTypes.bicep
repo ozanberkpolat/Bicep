@@ -29,6 +29,9 @@ type OSType = 'Linux' | 'Windows Server 2022' | 'Windows Server 2019' | 'Windows
 type vmSizeType = 'small' | 'medium' | 'large' | 'xlarge' | '2xlarge' | '4xlarge'
 
 @export()
+type ASP_SKU = 'P1V3' | 'P0V3'
+
+@export()
 type storageAccountKind = 'StorageV2' | 'BlobStorage' | 'FileStorage'
 
 @export()
