@@ -9,7 +9,6 @@ This repository contains a collection of reusable [Bicep](https://learn.microsof
 
 Modular Bicep scripts for deploying common Azure resources:
 
-- `.shared/` – Shared resources used across modules
 - `bicepconfig.json` – Microsoft Graph Extension
 - `createEntraGroup.bicep` – Entra ID Group
 - `deployACR.bicep` – Azure Container Registry
