@@ -35,6 +35,9 @@ type ASP_SKU = 'P1V3' | 'P0V3'
 type storageAccountKind = 'StorageV2' | 'BlobStorage' | 'FileStorage'
 
 @export()
+type RunTimeType = 'Dotnet' | 'Python'
+
+@export()
 type regionDefinitionType = {
   name: string
   region: string
