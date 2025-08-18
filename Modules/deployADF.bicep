@@ -6,7 +6,7 @@ import { regionType } from '.shared/commonTypes.bicep'
 // Parameters for the deployments
 param regionAbbreviation regionType
 param projectName string
-param Existing_PESubnet object
+param PEsubNetId string
 
 // Importing shared resources and configurations
 var PrivateDNSZones = json(loadTextContent('.shared/privatednszones.json'))
@@ -44,7 +44,7 @@ module Create_ADF 'br/public:avm/res/data-factory/factory:0.10.4' = {
           ]
         }
         service: PEServices.datafactory_datafactory.service
-        subnetResourceId: Existing_PESubnet.id
+        subnetResourceId: PEsubNetId
         name: naming.outputs.pe_adf_datafactory
       }
       {
@@ -56,7 +56,7 @@ module Create_ADF 'br/public:avm/res/data-factory/factory:0.10.4' = {
           ]
         }
         service: PEServices.datafactory_portal.service
-        subnetResourceId: Existing_PESubnet.id
+        subnetResourceId: PEsubNetId
         name: naming.outputs.pe_adf_portal
       }
     ]
