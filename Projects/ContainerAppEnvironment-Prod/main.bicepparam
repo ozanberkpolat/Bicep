@@ -1,0 +1,11 @@
+using './main.bicep'
+
+param regionAbbreviation = ''
+param projectName = 'caetest'
+param vNetRg = ''
+param subnetDelegation = 'Microsoft.App/environments'
+param existingPESubnet = ''
+param newRGName = ''
+param CAEsubnetAddressSpace = ''
+param vNetAddressSpace = ''
+param CAEsubnetDescription = 'cae'

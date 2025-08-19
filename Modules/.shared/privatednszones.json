@@ -86,5 +86,9 @@
   "databricks": {
     "configName": "privatelink-azuredatabricks-net",
     "dnsZone": "/subscriptions/SUBSCRIPTION-ID-HERE/resourceGroups/RH-NAME-HERE/providers/Microsoft.Network/privateDnsZones/privatelink.azuredatabricks.net"
+  },
+  "containerapp": {
+    "configName": "privatelink-azurecontainerapps-io",
+    "dnsZone": "/subscriptions/SUBSCRIPTION-ID-HERE/resourceGroups/RH-NAME-HERE//providers/Microsoft.Network/privateDnsZones/privatelink.switzerlandnorth.azurecontainerapps.io"
   }
 }
