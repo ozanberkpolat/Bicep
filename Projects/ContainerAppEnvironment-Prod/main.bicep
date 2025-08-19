@@ -15,12 +15,12 @@ param CAEsubnetDescription string
 var deploymentName = 'DeployCAE3-${projectName}-${regionAbbreviation}'
 
 resource Existing_RT 'Microsoft.Network/routeTables@2024-07-01' existing = {
-  name: 'EXISTING-RT-NAME'
+  name: 'rt-vnet-cloudopstest-swn'
   scope: resourceGroup(vNetRg)
 }
 
 resource Existing_vNet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
-  name: 'EXISTING-VNET-NAME'
+  name: 'vnet-cloudopstest-swn'
   scope: resourceGroup(vNetRg)
 }
 
@@ -59,7 +59,7 @@ module ResourceGroup '../../../modules/deployRG.bicep' = {
     Owner: 'ozan.polat@gunvorgroup.com'
     RGName: 'rg-cloudopstest-caetest-swn'
     regionAbbreviation: regionAbbreviation
-    subscriptionId: 'SUBSCRIPTION-ID-HERE'
+    subscriptionId: '9dea37eb-e703-42ec-8eca-bff1125314bd'
   }
 }
 
@@ -99,6 +99,15 @@ module CAE '../../../modules/deployCAE.bicep' = {
     sharedKey: Get_LogAnalytics_SharedKey.outputs.primarySharedKey
     appInsightsConnectionString: APPI.outputs.Connection_String
     infraSubnetId: Subnet.outputs.SubNetId
+    projectName: projectName
+    regionAbbreviation: regionAbbreviation
+  }
+}
+
+module Container_App '../../../modules/deployContainerApp.bicep' = {
+  scope: resourceGroup(newRGName)
+  params: {
+    CAEresourceId: CAE.outputs.Resource_ID
     projectName: projectName
     regionAbbreviation: regionAbbreviation
   }
