@@ -1,13 +1,7 @@
-@description('The object ID of the principal')
+
 param principalObjectId string
-
-@description('Role name (must match key in roles.json)')
 param roleName string
-
-@description('Principal type: User, Group, ServicePrincipal, or ManagedIdentity')
 param principalType string = 'User'
-
-@description('The name of the resource (e.g., Key Vault)')
 param resourceName string
 
 // Load role mappings from JSON

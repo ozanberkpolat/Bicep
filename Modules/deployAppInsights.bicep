@@ -1,18 +1,18 @@
 // This module deploys Application Insights
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param projectName string
 param regionAbbreviation regionType
-param LogAnalyticsWorkspaceId string
-param StorageAccountResourceId string 
+param LogAnalyticsWorkspaceResourceId string
 
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Deployment Name variable
+var deploymentName = 'DeployAPPI-${projectName}-${regionAbbreviation}'
 
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
@@ -25,12 +25,12 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module App_Insights 'br/public:avm/res/insights/component:0.6.0' = {
+  name: deploymentName
   params: {
     name: naming.outputs.AppInsights
-    location: location
-    workspaceResourceId: LogAnalyticsWorkspaceId
+    location: location.region
+    workspaceResourceId: LogAnalyticsWorkspaceResourceId
     applicationType: 'web'
-    linkedStorageAccountResourceId: StorageAccountResourceId
     retentionInDays: 90
   }
 }

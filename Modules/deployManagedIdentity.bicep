@@ -1,15 +1,17 @@
 // This module deploys Managed DevOps Pool
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param projectName string
 param regionAbbreviation regionType
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation)
+
+// Deployment Name variable
+var deploymentName = 'DeployMI-${projectName}-${regionAbbreviation}'
 
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
@@ -22,9 +24,10 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module userAssignedManagedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.1' = {
+  name: deploymentName
   params: {
-    name: naming.outputs.managedIdentityName
-    location: location
+    name: naming.outputs.managedIdentity
+    location: location.region
   }
 }
 

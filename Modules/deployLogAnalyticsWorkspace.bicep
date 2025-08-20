@@ -1,18 +1,17 @@
 // This module deploys Application Insights
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param projectName string
 param regionAbbreviation regionType
-param storageAccountName string
-param storageAccountId string 
 
+// Deployment Name variable
+var deploymentName = 'DeployLOG-${projectName}-${regionAbbreviation}'
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
 
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
@@ -25,9 +24,10 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module Log_Analytics_Workspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
+  name: deploymentName
   params: {
     name: naming.outputs.logAnalyticsWorkspace
-    location: location
+    location: location.region
     dailyQuotaGb: -1
     skuName:'PerGB2018'
     publicNetworkAccessForIngestion: 'Enabled'
@@ -39,16 +39,9 @@ module Log_Analytics_Workspace 'br/public:avm/res/operational-insights/workspace
       systemAssigned: true
     }
     dataRetention: 30
-    
-    linkedStorageAccounts: [
-      {
-        name: 'link-${storageAccountName}'
-        storageAccountIds: [
-          storageAccountId
-        ]
-      }
-    ]
   }
 }
 
-output Log_Workspace_ID string = Log_Analytics_Workspace.outputs.logAnalyticsWorkspaceId
+output Workspace_ID string = Log_Analytics_Workspace.outputs.logAnalyticsWorkspaceId
+output resource_ID string = Log_Analytics_Workspace.outputs.resourceId
+output Name string = Log_Analytics_Workspace.outputs.name

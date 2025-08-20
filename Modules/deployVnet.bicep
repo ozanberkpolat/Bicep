@@ -4,16 +4,16 @@
 import { regionType, subnetType, getLocation, regionDefinitionType } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
-param region regionType
+param regionAbbreviation regionType
 param vNetDescription string
 param vNetAddressSpace string[]
 param subnetsDefinitions subnetType[]
 
 // Get the region definition based on the provided region parameter
-var location regionDefinitionType = getLocation(region) 
+var location regionDefinitionType = getLocation(regionAbbreviation) 
 
 // Variables for naming conventions
-var spokeVNet = 'vnet-${vNetDescription}-${region}'
+var spokeVNet = 'vnet-${vNetDescription}-${regionAbbreviation}'
 var routeTablename = 'rt-${spokeVNet}'
 
 // Deploy NSG with default inbound rules
@@ -80,6 +80,7 @@ module networkSecurityGroup 'br/public:avm/res/network/network-security-group:0.
     }
   }
 ]
+
 // Deploy Route Table with Default Route
 module routeTable 'br/public:avm/res/network/route-table:0.4.1' = {
   name: 'routeTableDeployment-${routeTablename}'
@@ -120,8 +121,8 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.0' = {
     // Configure hub-and-spoke peering
     peerings: [
       {
-        name: 'peering-${vNetDescription}-${region}-fortigate_int-${region}'
-        remotePeeringName: 'peering-fortigate_int-${region}-${vNetDescription}-${region}' 
+        name: 'peering-${vNetDescription}-${regionAbbreviation}-fortigate_int-${regionAbbreviation}'
+        remotePeeringName: 'peering-fortigate_int-${regionAbbreviation}-${vNetDescription}-${regionAbbreviation}' 
         allowForwardedTraffic: true
         allowGatewayTransit: false
         allowVirtualNetworkAccess: true

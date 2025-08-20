@@ -1,7 +1,7 @@
 // This module deploys an Azure Data Factory (ADF) with private endpoint connectivity
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
@@ -11,8 +11,10 @@ param PEsubNetId string
 // Importing shared resources and configurations
 var PrivateDNSZones = json(loadTextContent('.shared/privatednszones.json'))
 var PEServices = loadJsonContent('.shared/pe_services.json')
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+
+
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
 
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
@@ -29,7 +31,7 @@ module Create_ADF 'br/public:avm/res/data-factory/factory:0.10.4' = {
   name: 'ADF'
   params:{
     name: naming.outputs.dataFactoryName
-    location: location
+    location: location.region
     publicNetworkAccess: 'Disabled'
     managedIdentities: {
       systemAssigned: true

@@ -1,99 +1,71 @@
 // This module deploys a KeyVault with Private Endpoint
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
 param projectName string
-param vNetName string
-param vNetRG string
-param peSubnetName string
-
+param privateEndpointSubnetID string
 
 // Variables 
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
-var kvName = 'kv-${projectName}-${regionAbbreviation}'
-var peName = 'pe-kv-${projectName}-${regionAbbreviation}'
-var kvID = resourceId('Microsoft.KeyVault/vaults', kvName)
-var subnetId = 'subscriptions/${subscription().subscriptionId}/resourceGroups/${vNetRG}/providers/Microsoft.Network/virtualNetworks/${vNetName}/subnets/${peSubnetName}'
+var deploymentName = 'DeployKV-${projectName}-${regionAbbreviation}'
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
-// Deploy Key Vault
-resource keyVault 'Microsoft.KeyVault/vaults@2021-10-01' = {
-  name: kvName
-  location: location
-  properties: {
-    sku: {
-      family: 'A'
-      name: 'standard'
-    }
-    tenantId: subscription().tenantId
-    accessPolicies: []
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
+
+// Naming conventions module
+module naming '.shared/naming_conventions.bicep' = {
+  name: 'naming'
+  params: {
+    projectName: projectName
+    regionAbbreviation: regionAbbreviation
+    subscriptionName: subscription().displayName
+  }
+}
+
+// Deploy Key Vault with Private Endpoint
+module Key_Vault 'br/public:avm/res/key-vault/vault:0.13.1' = {
+  name: deploymentName
+  params: {
+    name: naming.outputs.keyVaultName
+    location: location.region
+    sku: 'standard'
+    accessPolicies:[]
     publicNetworkAccess: 'Disabled'
+    enablePurgeProtection: true
+    enableSoftDelete: true
+    enableVaultForDeployment: false
+    enableVaultForTemplateDeployment: false
+    enableRbacAuthorization: true
+    softDeleteRetentionInDays: 90
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
       ipRules: []
       virtualNetworkRules: []
     }
-    enabledForDeployment: false
-    enabledForTemplateDeployment: false
-    enabledForDiskEncryption: false
-    enableRbacAuthorization: true
-    enableSoftDelete: true
-    softDeleteRetentionInDays: 90
-  }
-}
-
-// Private Endpoint for Key Vault
-resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
-  name: peName
-  location: location
-  dependsOn: [
-    keyVault
-  ]
-  properties: {
-    privateLinkServiceConnections: [
+    
+    privateEndpoints: [
       {
-        name: peName
-        id: '${resourceId('Microsoft.Network/privateEndpoints', peName)}/privateLinkServiceConnections/${peName}'
-        properties: {
-          privateLinkServiceId: kvID
-          groupIds: [
-            'vault'
+        subnetResourceId: privateEndpointSubnetID
+        name: naming.outputs.pe_keyVault
+        service: 'vault'
+        ipConfigurations: []
+        privateLinkServiceConnectionName: naming.outputs.pe_keyVault
+        customNetworkInterfaceName: naming.outputs.pe_keyVault_nic
+        privateDnsZoneGroup: {
+          privateDnsZoneGroupConfigs: [
+            {
+              name: PrivateDNSZones.keyvault.configName
+              privateDnsZoneResourceId: PrivateDNSZones.keyvault.dnsZone
+            }
           ]
-          privateLinkServiceConnectionState: {
-            status: 'Approved'
-            description: 'Auto-Approved'
-            actionsRequired: 'None'
-          }
-        }
-      }
-    ]
-    manualPrivateLinkServiceConnections: []
-    customNetworkInterfaceName: '${peName}-nic'
-    subnet: {
-      id: subnetId
-    }
-    ipConfigurations: []
-    customDnsConfigs: []
-  }
-}
 
-// Private DNS Zone Group
-resource dnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2020-03-01' = {
-  name: 'default'
-  parent: privateEndpoint
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: PrivateDNSZones.keyvault.configName
-        properties: {
-          privateDnsZoneId: PrivateDNSZones.keyvault.dnsZone
         }
       }
     ]
   }
+
 }

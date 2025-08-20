@@ -1,7 +1,7 @@
 // This module deploys an Azure Container Registry (ACR) with private endpoint connectivity
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
@@ -11,9 +11,10 @@ param PEsubNetId string
 // Variables for naming conventions
 var deploymentName = 'DeployACR-${projectName}-${regionAbbreviation}'
 
-// Loading shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
+
+// Get the Private DNS Zone mapping
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
 // Naming conventions module
@@ -35,7 +36,7 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
     acrSku: 'Premium'
     azureADAuthenticationAsArmPolicyStatus: 'enabled'
     exportPolicyStatus: 'enabled'
-    location: location
+    location: location.region
     publicNetworkAccess: 'Disabled'
     privateEndpoints: [
       {

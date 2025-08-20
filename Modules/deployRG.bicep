@@ -4,7 +4,7 @@ targetScope = 'subscription'
 // This module deploys a Resource Group
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param subscriptionId string
@@ -13,21 +13,23 @@ param regionAbbreviation regionType
 param Owner string
 param CostCenter string
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation)
+
+// Deployment Name variable
+var deploymentName = 'DeployRG-${RGName}-${regionAbbreviation}'
 
 // Deploy Resource Group
 module RG 'br/public:avm/res/resources/resource-group:0.4.1' = {
   scope: subscription(subscriptionId)
-  name: RGName
+  name: deploymentName
   params: {
     name: RGName
     tags: {
       Owner: Owner
       CostCenter: CostCenter
     }
-    location: location
+    location: location.region
   }  
 }
 

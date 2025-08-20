@@ -1,6 +1,6 @@
 // This module deploys a Storage Account with the private endpoints of the services your choice
 // Importing necessary types
-import { regionType, storageAccountKind } from '.shared/commonTypes.bicep'
+import { regionType, storageAccountKind, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 @maxLength(18)
@@ -20,9 +20,10 @@ param serviceEndpoints array = [
 param regionAbbreviation regionType
 param SAKind storageAccountKind = 'StorageV2' // Default to StorageV2
 
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation)
+
 // Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
 
@@ -45,7 +46,7 @@ var endpointNames = {
 // Deploy Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-04-01' = {
   name: storageAccountName
-  location: location
+  location: location.region
   sku: {
     name: 'Standard_LRS'
   }
@@ -125,7 +126,7 @@ resource Microsoft_Storage_storageAccounts_fileServices_storageAccountName_defau
 // Deploy Private Endpoints
 resource privateEndpoints 'Microsoft.Network/privateEndpoints@2023-11-01' = [for svc in serviceEndpoints: {
   name: endpointNames[svc]
-  location: location
+  location: location.region
   properties: {
     privateLinkServiceConnections: [
       {
@@ -169,6 +170,6 @@ resource privateDnsZoneGroups 'Microsoft.Network/privateEndpoints/privateDnsZone
   }
 }]
 
-output SAID string = storageAccount.id
-output SAName string = storageAccount.name
+output ResourceId string = storageAccount.id
+output Name string = storageAccount.name
 

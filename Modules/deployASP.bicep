@@ -1,7 +1,7 @@
 // This module deploys an App Service Plan (ASP) 
 
 // Importing necessary types
-import { OSType, regionType, ASP_SKU } from '.shared/commonTypes.bicep'
+import { OSType, regionType, ASP_SKU, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param projectName string
@@ -9,9 +9,11 @@ param sku ASP_SKU
 param osType OSType
 param regionAbbreviation regionType
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
+
+// Deployment Name variable
+var deploymentName = 'DeployASP-${projectName}-${regionAbbreviation}'
 
 // SKU Mapping Variable
 var skuMap = {
@@ -39,9 +41,10 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
+  name: deploymentName
   params: {
-    name: naming.outputs.appServicePlanName
-    location: location
+    name: naming.outputs.appServicePlan
+    location: location.region
     skuName: skuConfig.name
     kind: skuConfig.kind
     reserved: osType == 'Linux' 

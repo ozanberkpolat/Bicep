@@ -1,28 +1,38 @@
 // This module deploys a Network Security Group with baked-in/default rules
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
 param projectName string
-param subscriptionName string
 param subnetAddressSpace string
 param vNetAddressSpace string
-param customRules array = []
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation)
 
-// Variables for naming conventions
-var normalizedSubscriptionName = toLower(replace(replace(subscriptionName, '-', ''), ' ', ''))
-var NSGName = 'nsg-${normalizedSubscriptionName}-${projectName}-${regionAbbreviation}'
+// Deployment Name variable
+var deploymentName = 'DeployNSG-${projectName}-${regionAbbreviation}'
 
+// Naming conventions module
+module naming '.shared/naming_conventions.bicep' = {
+  name: 'naming'
+  params: {
+    projectName: projectName
+    regionAbbreviation: regionAbbreviation
+    subscriptionName: subscription().displayName
+  }
+}
 
-// Default inbound rules for the NSG
-var defaultRules = [
-  {
+// Deploy NSG
+module nsg 'br/public:avm/res/network/network-security-group:0.5.1' = {
+  name: deploymentName
+  params: {
+    name: naming.outputs.NSGName
+    location: location.region
+    securityRules: [
+      {
     name: 'Allow_All_InsideSubnet'
     properties: {
       priority: 4093
@@ -44,7 +54,9 @@ var defaultRules = [
       protocol: '*'
       sourcePortRange: '*'
       destinationPortRange: '*'
-      sourceAddressPrefixes: vNetAddressSpace
+      sourceAddressPrefixes: [
+        vNetAddressSpace
+      ]
       destinationAddressPrefix: subnetAddressSpace
     }
   }
@@ -74,15 +86,7 @@ var defaultRules = [
       destinationAddressPrefix: '*'
     }
   }
-]
-
-// Deploy NSG
-module nsg 'br/public:avm/res/network/network-security-group:0.5.1' = {
-  name: NSGName
-  params: {
-    name: NSGName
-    location: location
-    securityRules: union(customRules, defaultRules)
+    ]
   }
 }
 

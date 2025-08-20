@@ -1,7 +1,7 @@
 // This module deploys a Route Table
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
@@ -13,10 +13,13 @@ param logAnalyticsWorkspaceId string
 param sharedKey string
 param peSubnetResourceId string
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
+
+// Deployment Name variable
 var deploymentName = 'DeployCAE-${projectName}-${regionAbbreviation}'
+
+// Get the Private DNS Zone mapping
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
 // Naming conventions module
@@ -33,7 +36,7 @@ module Deploy_CAE 'br/public:avm/res/app/managed-environment:0.11.3' = {
   name: deploymentName
   params: {
     name: naming.outputs.ContainerAppEnv
-    location: location
+    location: location.region
     publicNetworkAccess: 'Disabled'
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -82,3 +85,5 @@ module PE 'br/public:avm/res/network/private-endpoint:0.11.0' = {
     }
   }
 }
+
+output Resource_ID string = Deploy_CAE.outputs.resourceId

@@ -1,17 +1,17 @@
 // This module deploys a Route Table
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
 param projectName string
 param CAEresourceId string
 
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Deployment Name variable
 var deploymentName = 'DeployCA-${projectName}-${regionAbbreviation}'
 
 // Naming conventions module
@@ -43,7 +43,7 @@ module Container_App 'br/public:avm/res/app/container-app:0.18.1' = {
     ingressExternal: true
     ingressAllowInsecure: false
     ingressTransport: 'auto'
-    location: location
+    location: location.region
     scaleSettings: {
       maxReplicas: 1
       minReplicas: 1

@@ -1,19 +1,27 @@
 // This module deploys a Route Table
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
 param projectName string
-param vNetName string
 
-// Variable for Naming Convention
-var routeTableName = 'rt-${vNetName}'
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation)
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Deployment Name variable
+var deploymentName = 'DeployRT-${projectName}-${regionAbbreviation}'
+
+// Naming conventions module
+module naming '.shared/naming_conventions.bicep' = {
+  name: 'naming'
+  params: {
+    projectName: projectName
+    regionAbbreviation: regionAbbreviation
+    subscriptionName: subscription().displayName
+  }
+}
 
 // Default Route for the RT
 var defaultRoute = [
@@ -29,10 +37,10 @@ var defaultRoute = [
 
 // Deploy Route Table
 module Route_Table 'br/public:avm/res/network/route-table:0.4.1' = {
-  name: 'rt-${projectName}'
+  name: deploymentName
   params: {
-    name: routeTableName
-    location: location
+    name: naming.outputs.routeTable
+    location: location.region
     routes: defaultRoute
   }
 }

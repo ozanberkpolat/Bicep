@@ -1,7 +1,7 @@
 // This module deploys a Function App to an existing App Service Plan
 
 // Importing necessary types
-import { regionType, SitesOSType, RunTimeType } from '.shared/commonTypes.bicep'
+import { regionType, SitesOSType, RunTimeType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param projectName string
@@ -19,9 +19,8 @@ param regionAbbreviation regionType
 param AppInsightsResourceId string
 param storageAccountResourceId string
 
-// Importing shared resources and configurations
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
 
 var functionAppName = naming.outputs.functionApp
 
@@ -47,7 +46,7 @@ module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
   name: deploymentName
   params: {
     name: naming.outputs.functionApp
-    location: location
+    location: location.region
     kind: kind
     serverFarmResourceId: appServicePlanId
     hyperV: false

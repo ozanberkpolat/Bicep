@@ -5,54 +5,44 @@ import { regionType } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param vNetName string
+param projectName string
 param subnetDescription string
 param subnetAddressSpace string
-param vNetAddressSpace string
-param subscriptionName string
-param projectName string
 param regionAbbreviation regionType
+param subnetDelegation string
+param NSG_ID string
+param RouteTable_ID string
+
+var deploymentName = 'DeploySubNet-${subnetDescription}-${regionAbbreviation}'
 
 // Variables for naming conventions
 var vNetShortName = split(vNetName, '-')[1]
 var SubNetFullName = 'sn-${vNetShortName}-${subnetDescription}-${regionAbbreviation}'
 
-// Deploy NSG for the Subnet
-module NSG 'deployNSG.bicep' = {
+
+// Naming conventions module
+module naming '.shared/naming_conventions.bicep' = {
+  name: 'naming'
   params: {
     projectName: projectName
     regionAbbreviation: regionAbbreviation
-    subnetAddressSpace: subnetAddressSpace
-    subscriptionName: subscriptionName
-    vNetAddressSpace: vNetAddressSpace
+    subscriptionName: subscription().displayName
   }
 }
 
-//Deploy Route Table for the subnet
-module routeTable 'deployRouteTable.bicep' = {
+module SubNet 'br/public:avm/res/network/virtual-network/subnet:0.1.2' = {
+  name: deploymentName
   params: {
-    projectName: projectName
-    regionAbbreviation: regionAbbreviation
-    vNetName: vNetName
-  }
-}
-
-// Deploy subnet
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' = {
-  name: '${vNetName}/${SubNetFullName}'
-  properties: {
+    name: SubNetFullName
+    virtualNetworkName: vNetName
     addressPrefix: subnetAddressSpace
-    networkSecurityGroup: {
-      id: NSG.outputs.NSGID
-    }
-    routeTable: {
-      id: routeTable.outputs.routeTableId
-    }
+    networkSecurityGroupResourceId: NSG_ID
+    routeTableResourceId: RouteTable_ID
     privateEndpointNetworkPolicies: 'Enabled'
     privateLinkServiceNetworkPolicies: 'Enabled'
+    delegation: subnetDelegation
   }
 }
 
-output subnetId string = subnet.id
-output nsgId string = NSG.outputs.NSGID
-output routeTableId string = routeTable.outputs.routeTableId
+output SubNetId string = SubNet.outputs.resourceId
 output outboundSubnetName string = SubNetFullName

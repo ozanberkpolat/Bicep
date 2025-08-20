@@ -1,7 +1,7 @@
 // This module deploys Data Bricks Workspace and it's dependent resources such as Private and Public subnets and a managed RG
 
 // Importing necessary types
-import { regionType } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
@@ -15,12 +15,21 @@ param VNETRG string
 param Owner string
 param CostCenter string
 param dataResourceGroup string
+param PEsubNetId string
+param RouteTableId string
+param vNetName string
+param vNetId string
 
 // Importing shared resources and configurations
 var PrivateDNSZones = json(loadTextContent('.shared/privatednszones.json'))
 var PEServices = loadJsonContent('.shared/pe_services.json')
-var locations = loadJsonContent('.shared/locations.json')
-var location = locations[regionAbbreviation].region
+
+// Get the region definition based on the provided region parameter
+var location regionDefinitionType = getLocation(regionAbbreviation) 
+
+// Deployment Name variable
+var deploymentName = 'DeployDBW-${projectName}-${regionAbbreviation}'
+
 
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
@@ -32,45 +41,27 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
-// Discover existing vNet
-resource Existing_VNET 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
-  name: 'vnet-${projectName}-swn'
-  scope: resourceGroup(VNETRG)
-}
-
-
-resource Existing_routeTable 'Microsoft.Network/routeTables@2024-07-01' existing = {
-  name: 'rt-vnet-${projectName}-swn'
-  scope: resourceGroup(VNETRG)
-}
-
-// Discover existing subnet
-resource Existing_PESubnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' existing = {
-  parent: Existing_VNET
-  name: 'sn-${projectName}-pe-swn'
-}
-
 // Create managed resource group
 module Create_DataRG 'br/public:avm/res/resources/resource-group:0.4.1' = {
   scope: subscription(subscriptionId)
-  name: dataResourceGroup
+  name: deploymentName
   params: {
     name: dataResourceGroup
     tags: {
       Owner: Owner
       CostCenter: CostCenter
     }
-    location: location
+    location: location.region
   }  
 }
 
 // Create an empty NSG for DBW
 module Create_NSG 'br/public:avm/res/network/network-security-group:0.5.1' = {
-  name: 'NSG'
+  name: deploymentName
   scope: resourceGroup(dataResourceGroup)
   params: {
     name: 'nsg-${projectName}-swn'
-    location: location
+    location: location.region
   }
   dependsOn: [
     Create_DataRG
@@ -80,12 +71,12 @@ module Create_NSG 'br/public:avm/res/network/network-security-group:0.5.1' = {
 // Create Private subnet for DBW
 module Create_DWHPrivateSubnet 'br/public:avm/res/network/virtual-network/subnet:0.1.2' = {
   scope: resourceGroup(VNETRG)
-  name: 'DWHPrivateSubnet'
+  name: deploymentName
   params: {
     name: PrivateSubnetName
-    virtualNetworkName: Existing_VNET.name
+    virtualNetworkName: vNetName
     addressPrefix: PrivateSubnetAddressSpace
-    routeTableResourceId: Existing_routeTable.id
+    routeTableResourceId: RouteTableId
     delegation: 'Microsoft.Databricks/workspaces'
     networkSecurityGroupResourceId: Create_NSG.outputs.resourceId
   }
@@ -94,12 +85,12 @@ module Create_DWHPrivateSubnet 'br/public:avm/res/network/virtual-network/subnet
 // Create Public subnet for DBW
 module Create_DWHPublicSubnet 'br/public:avm/res/network/virtual-network/subnet:0.1.2' = {
   scope: resourceGroup(VNETRG)
-  name: 'DWHPublicSubnet'
+  name: deploymentName
   params: {
     name: PublicSubnetName
-    virtualNetworkName: Existing_VNET.name
+    virtualNetworkName: vNetName
     addressPrefix: PublicSubnetAddressSpace
-    routeTableResourceId: Existing_routeTable.id
+    routeTableResourceId: RouteTableId
     delegation: 'Microsoft.Databricks/workspaces'
     networkSecurityGroupResourceId: Create_NSG.outputs.resourceId
   }
@@ -111,15 +102,15 @@ module Create_DWHPublicSubnet 'br/public:avm/res/network/virtual-network/subnet:
 // Create Data Bricks Workspace
 module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
   scope: resourceGroup(dataResourceGroup)
-  name: 'DBW_Prod'
+  name: deploymentName
   params: {
-    name: naming.outputs.databricksWorkspaceName
-    location: location
+    name: naming.outputs.databricksWorkspace
+    location: location.region
     customPrivateSubnetName: PrivateSubnetName
     customPublicSubnetName: PublicSubnetName
     publicNetworkAccess: 'Disabled'
     skuName: 'premium'
-    customVirtualNetworkResourceId: Existing_VNET.id
+    customVirtualNetworkResourceId: vNetId
     disablePublicIp: true
     requiredNsgRules: 'NoAzureDatabricksRules'
     privateEndpoints: [
@@ -132,7 +123,7 @@ module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
           ]
         }
         service: PEServices.databricks_ui_api.service
-        subnetResourceId: Existing_PESubnet.id
+        subnetResourceId: PEsubNetId
         name: naming.outputs.pe_dbw_api
       }
       {
@@ -144,7 +135,7 @@ module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
           ]
         }
         service: PEServices.databricks_browser_authentication.service
-        subnetResourceId: Existing_PESubnet.id
+        subnetResourceId: PEsubNetId
         name: naming.outputs.pe_dbw_auth
       }
     ]
