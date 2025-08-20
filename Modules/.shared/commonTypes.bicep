@@ -57,7 +57,7 @@ func getLocation(region regionType) regionDefinitionType => {
         : region == 'weu'  ? 'westeurope' 
         : region == 'sea' ? 'southeastasia'  
         : 'unknown'
-  nextHopIp: 'NEXT-HOP-IP'
+  nextHopIp: region == 'usc' ? 'USC-NEXT-HOP-IP' : 'RoW-NEXT-HOP-IP'
   dnsServers: region == 'usc' ? ['USC-DNS-1', 'USC-DNS-2'] : ['RoW-DNS-1', 'RoW-DNS-2']
   firewall: {
     external: '/subscriptions/SUBSCRIPTION-NAME-HERE/resourceGroups/rg-fortigate_ext-${region}/providers/Microsoft.Network/virtualNetworks/vnet-fortigate_ext-${region}'
