@@ -7,9 +7,6 @@ import { regionType, regionDefinitionType, getLocation } from '.shared/commonTyp
 param projectName string
 param regionAbbreviation regionType
 
-// Deployment Name variable
-var deploymentName = 'DeployLOG-${projectName}-${regionAbbreviation}'
-
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
@@ -24,7 +21,6 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module Log_Analytics_Workspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
-  name: deploymentName
   params: {
     name: naming.outputs.logAnalyticsWorkspace
     location: location.region

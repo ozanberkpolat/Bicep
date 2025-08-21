@@ -8,9 +8,6 @@ param regionAbbreviation regionType
 param projectName string
 param PEsubNetId string
 
-// Variables for naming conventions
-var deploymentName = 'DeployACR-${projectName}-${regionAbbreviation}'
-
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
@@ -29,7 +26,6 @@ module naming '.shared/naming_conventions.bicep' = {
 
 // Azure Container Registry deployment
 module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
-  name: deploymentName
   params: {
     name: naming.outputs.containerRegistry
     acrAdminUserEnabled: false

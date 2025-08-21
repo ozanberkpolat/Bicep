@@ -16,13 +16,9 @@ param CostCenter string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation)
 
-// Deployment Name variable
-var deploymentName = 'DeployRG-${RGName}-${regionAbbreviation}'
-
 // Deploy Resource Group
 module RG 'br/public:avm/res/resources/resource-group:0.4.1' = {
   scope: subscription(subscriptionId)
-  name: deploymentName
   params: {
     name: RGName
     tags: {

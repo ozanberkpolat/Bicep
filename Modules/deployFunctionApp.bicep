@@ -5,13 +5,10 @@ import { regionType, SitesOSType, RunTimeType, regionDefinitionType, getLocation
 
 // Parameters for the deployments
 param projectName string
-param vNetName string
-param vNetRG string
-param peSubnetName string
+param peSubnetID string
 param outboundSubnetID string
 param appServicePlanId string
 param storageAccountName string
-param storageAccountId string
 param osType SitesOSType
 param RuntimeStack RunTimeType
 param RuntimeVersion string
@@ -22,15 +19,13 @@ param storageAccountResourceId string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-var functionAppName = naming.outputs.functionApp
+// Assigning the name to a variable for general usage
+var functionAppName = (osType == 'Linux') ? naming.outputs.functionAppLnx : naming.outputs.functionApp
 
 // Other Variables
 var kind = (osType == 'Linux') ? 'functionapp,linux' : 'functionapp'
 var linuxFxVersion = '${toUpper(RuntimeStack)}|${RuntimeVersion}'
-var PeSubnetID = 'subscriptions/${subscription().subscriptionId}/resourceGroups/${vNetRG}/providers/Microsoft.Network/virtualNetworks/${vNetName}/subnets/${peSubnetName}'
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
-var deploymentName = 'DeployFunc-${projectName}-${regionAbbreviation}'
-
 
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
@@ -43,9 +38,8 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
-  name: deploymentName
   params: {
-    name: naming.outputs.functionApp
+    name: (osType == 'Linux') ? naming.outputs.functionAppLnx : naming.outputs.functionApp
     location: location.region
     kind: kind
     serverFarmResourceId: appServicePlanId
@@ -84,7 +78,8 @@ module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
     ]
     siteConfig: {
       numberOfWorkers: 1
-      linuxFxVersion: linuxFxVersion
+      linuxFxVersion: (osType == 'Linux') ? linuxFxVersion : ''
+      netFrameworkVersion: RuntimeVersion
       acrUseManagedIdentityCreds: false
       alwaysOn: true
       http20Enabled: false
@@ -96,7 +91,7 @@ module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${listKeys(storageAccountId, '2022-09-01').keys[0].value}'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${listKeys(storageAccountResourceId, '2022-09-01').keys[0].value}'
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
@@ -113,10 +108,10 @@ module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
   privateEndpoints: [
     {
       
-      name: naming.outputs.pe_func
-      subnetResourceId: PeSubnetID
-      privateLinkServiceConnectionName: naming.outputs.functionApp
-      customNetworkInterfaceName: naming.outputs.pe_func_nic
+      name: (osType == 'Linux') ? naming.outputs.pe_func_lnx : naming.outputs.pe_func
+      subnetResourceId: peSubnetID
+      privateLinkServiceConnectionName: (osType == 'Linux') ? naming.outputs.functionAppLnx : naming.outputs.functionApp
+      customNetworkInterfaceName: (osType == 'Linux') ? naming.outputs.pe_func_lnx_nic : naming.outputs.pe_func_nic
       privateDnsZoneGroup: {
         privateDnsZoneGroupConfigs: [
           {

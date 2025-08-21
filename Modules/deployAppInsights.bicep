@@ -11,9 +11,6 @@ param LogAnalyticsWorkspaceResourceId string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Deployment Name variable
-var deploymentName = 'DeployAPPI-${projectName}-${regionAbbreviation}'
-
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
@@ -25,7 +22,6 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module App_Insights 'br/public:avm/res/insights/component:0.6.0' = {
-  name: deploymentName
   params: {
     name: naming.outputs.AppInsights
     location: location.region

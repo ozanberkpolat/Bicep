@@ -10,12 +10,7 @@ param vNetRG string
 param peSubnetName string
 
 @minLength(1)
-param serviceEndpoints array = [
-  'blob'
-  'file'
-  'table'
-  'queue'
-]
+param serviceEndpoints array
 
 param regionAbbreviation regionType
 param SAKind storageAccountKind = 'StorageV2' // Default to StorageV2
@@ -25,7 +20,6 @@ var location regionDefinitionType = getLocation(regionAbbreviation)
 
 // Importing shared resources and configurations
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
-
 
 // Variables
 var storageAccountName = 'gun${projectName}${regionAbbreviation}'

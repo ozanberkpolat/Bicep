@@ -11,9 +11,6 @@ param CAEresourceId string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Deployment Name variable
-var deploymentName = 'DeployCA-${projectName}-${regionAbbreviation}'
-
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
@@ -25,7 +22,6 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module Container_App 'br/public:avm/res/app/container-app:0.18.1' = {
-  name: deploymentName
   params: {
     name: naming.outputs.ContainerApp
     containers:  [

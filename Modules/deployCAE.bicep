@@ -16,9 +16,6 @@ param peSubnetResourceId string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Deployment Name variable
-var deploymentName = 'DeployCAE-${projectName}-${regionAbbreviation}'
-
 // Get the Private DNS Zone mapping
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
@@ -33,7 +30,6 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module Deploy_CAE 'br/public:avm/res/app/managed-environment:0.11.3' = {
-  name: deploymentName
   params: {
     name: naming.outputs.ContainerAppEnv
     location: location.region

@@ -12,7 +12,6 @@ param PEsubNetId string
 var PrivateDNSZones = json(loadTextContent('.shared/privatednszones.json'))
 var PEServices = loadJsonContent('.shared/pe_services.json')
 
-
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
@@ -28,7 +27,6 @@ module naming '.shared/naming_conventions.bicep' = {
 
 // Azure Data Factory deployment
 module Create_ADF 'br/public:avm/res/data-factory/factory:0.10.4' = {
-  name: 'ADF'
   params:{
     name: naming.outputs.dataFactoryName
     location: location.region

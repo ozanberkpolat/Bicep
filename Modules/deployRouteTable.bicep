@@ -10,9 +10,6 @@ param projectName string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation)
 
-// Deployment Name variable
-var deploymentName = 'DeployRT-${projectName}-${regionAbbreviation}'
-
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
@@ -37,7 +34,6 @@ var defaultRoute = [
 
 // Deploy Route Table
 module Route_Table 'br/public:avm/res/network/route-table:0.4.1' = {
-  name: deploymentName
   params: {
     name: naming.outputs.routeTable
     location: location.region

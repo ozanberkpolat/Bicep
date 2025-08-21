@@ -27,10 +27,6 @@ var PEServices = loadJsonContent('.shared/pe_services.json')
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Deployment Name variable
-var deploymentName = 'DeployDBW-${projectName}-${regionAbbreviation}'
-
-
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
@@ -44,7 +40,6 @@ module naming '.shared/naming_conventions.bicep' = {
 // Create managed resource group
 module Create_DataRG 'br/public:avm/res/resources/resource-group:0.4.1' = {
   scope: subscription(subscriptionId)
-  name: deploymentName
   params: {
     name: dataResourceGroup
     tags: {
@@ -57,7 +52,6 @@ module Create_DataRG 'br/public:avm/res/resources/resource-group:0.4.1' = {
 
 // Create an empty NSG for DBW
 module Create_NSG 'br/public:avm/res/network/network-security-group:0.5.1' = {
-  name: deploymentName
   scope: resourceGroup(dataResourceGroup)
   params: {
     name: 'nsg-${projectName}-swn'
@@ -71,7 +65,6 @@ module Create_NSG 'br/public:avm/res/network/network-security-group:0.5.1' = {
 // Create Private subnet for DBW
 module Create_DWHPrivateSubnet 'br/public:avm/res/network/virtual-network/subnet:0.1.2' = {
   scope: resourceGroup(VNETRG)
-  name: deploymentName
   params: {
     name: PrivateSubnetName
     virtualNetworkName: vNetName
@@ -85,7 +78,6 @@ module Create_DWHPrivateSubnet 'br/public:avm/res/network/virtual-network/subnet
 // Create Public subnet for DBW
 module Create_DWHPublicSubnet 'br/public:avm/res/network/virtual-network/subnet:0.1.2' = {
   scope: resourceGroup(VNETRG)
-  name: deploymentName
   params: {
     name: PublicSubnetName
     virtualNetworkName: vNetName
@@ -102,7 +94,6 @@ module Create_DWHPublicSubnet 'br/public:avm/res/network/virtual-network/subnet:
 // Create Data Bricks Workspace
 module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
   scope: resourceGroup(dataResourceGroup)
-  name: deploymentName
   params: {
     name: naming.outputs.databricksWorkspace
     location: location.region

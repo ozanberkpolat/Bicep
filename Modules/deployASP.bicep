@@ -12,9 +12,6 @@ param regionAbbreviation regionType
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Deployment Name variable
-var deploymentName = 'DeployASP-${projectName}-${regionAbbreviation}'
-
 // SKU Mapping Variable
 var skuMap = {
   P1V3: {
@@ -41,9 +38,8 @@ module naming '.shared/naming_conventions.bicep' = {
 }
 
 module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
-  name: deploymentName
   params: {
-    name: naming.outputs.appServicePlan
+    name: osType == 'Linux' ? naming.outputs.appServicePlanLnx : naming.outputs.appServicePlan
     location: location.region
     skuName: skuConfig.name
     kind: skuConfig.kind
@@ -57,3 +53,4 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
 
 output appServicePlanId string = appServicePlan.outputs.resourceId
 output appServicePlanName string = appServicePlan.outputs.name
+output OS string = osType

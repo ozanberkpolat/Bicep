@@ -22,9 +22,6 @@ var selectedOS = osMAP[OS]
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation)
 
-// Deployment Name variable
-var deploymentName = 'DeployMDP-${projectName}-${regionAbbreviation}'
-
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
@@ -37,7 +34,6 @@ module naming '.shared/naming_conventions.bicep' = {
 
 // Deploy Managed DevOps Pool
 module Create_MDP 'br/public:avm/res/dev-ops-infrastructure/pool:0.7.0' = {
-  name: deploymentName
   params: {
     name: naming.outputs.ManagedDevOpsPool
     agentProfile: {

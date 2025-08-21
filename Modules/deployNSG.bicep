@@ -12,9 +12,6 @@ param vNetAddressSpace string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation)
 
-// Deployment Name variable
-var deploymentName = 'DeployNSG-${projectName}-${regionAbbreviation}'
-
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
@@ -27,7 +24,6 @@ module naming '.shared/naming_conventions.bicep' = {
 
 // Deploy NSG
 module nsg 'br/public:avm/res/network/network-security-group:0.5.1' = {
-  name: deploymentName
   params: {
     name: naming.outputs.NSGName
     location: location.region
@@ -90,4 +86,4 @@ module nsg 'br/public:avm/res/network/network-security-group:0.5.1' = {
   }
 }
 
-output NSGID string = nsg.outputs.resourceId
+output Resource_ID string = nsg.outputs.resourceId

@@ -9,7 +9,6 @@ param projectName string
 param privateEndpointSubnetID string
 
 // Variables 
-var deploymentName = 'DeployKV-${projectName}-${regionAbbreviation}'
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
 // Get the region definition based on the provided region parameter
@@ -27,9 +26,8 @@ module naming '.shared/naming_conventions.bicep' = {
 
 // Deploy Key Vault with Private Endpoint
 module Key_Vault 'br/public:avm/res/key-vault/vault:0.13.1' = {
-  name: deploymentName
   params: {
-    name: naming.outputs.keyVaultName
+    name: naming.outputs.keyVault
     location: location.region
     sku: 'standard'
     accessPolicies:[]

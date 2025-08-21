@@ -1,128 +1,46 @@
 // This modules deploys a full Vnet with the dependencies
 
 //Importing necessary types
-import { regionType, subnetType, getLocation, regionDefinitionType } from '.shared/commonTypes.bicep'
+import { regionType, getLocation, regionDefinitionType } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
 param vNetDescription string
-param vNetAddressSpace string[]
-param subnetsDefinitions subnetType[]
+param vNetAddressSpace string
+param projectName string
 
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Variables for naming conventions
-var spokeVNet = 'vnet-${vNetDescription}-${regionAbbreviation}'
-var routeTablename = 'rt-${spokeVNet}'
-
-// Deploy NSG with default inbound rules
-module networkSecurityGroup 'br/public:avm/res/network/network-security-group:0.5.1' = [
-  for subnet in subnetsDefinitions: {
-    name: 'nsgDeployment-${subnet.name}-${spokeVNet}'
-    params: {
-      name: 'nsg-${subnet.name}'
-      location: location.region
-      securityRules: union(subnet.rules, [
-        {
-          name: 'Allow_All_InsideSubnet'
-          properties: {
-            priority: 4093
-            direction: 'Inbound'
-            access: 'Allow'
-            protocol: '*'
-            sourcePortRange: '*'
-            destinationPortRange: '*'
-            sourceAddressPrefix: subnet.addressPrefix
-            destinationAddressPrefix: subnet.addressPrefix
-          }
-        }
-        {
-          name: 'Deny_All_FromOtherSubnetsInVnet'
-          properties: {
-            priority: 4094
-            direction: 'Inbound'
-            access: 'Deny'
-            protocol: '*'
-            sourcePortRange: '*'
-            destinationPortRange: '*'
-            sourceAddressPrefixes: vNetAddressSpace
-            destinationAddressPrefix: subnet.addressPrefix
-          }
-        }
-        {
-          name: 'Allow_All_FromOnPremAndOtherVnets'
-          properties: {
-            priority: 4095
-            direction: 'Inbound'
-            access: 'Allow'
-            protocol: '*'
-            sourcePortRange: '*'
-            destinationPortRange: '*'
-            sourceAddressPrefix: '10.0.0.0/8'
-            destinationAddressPrefix: subnet.addressPrefix
-          }
-        }
-        {
-          name: 'Deny_All_Inbound'
-          properties: {
-            priority: 4096
-            direction: 'Inbound'
-            access: 'Deny'
-            protocol: '*'
-            sourcePortRange: '*'
-            destinationPortRange: '*'
-            sourceAddressPrefix: '*'
-            destinationAddressPrefix: '*'
-          }
-        }
-      ])
-    }
-  }
-]
-
-// Deploy Route Table with Default Route
-module routeTable 'br/public:avm/res/network/route-table:0.4.1' = {
-  name: 'routeTableDeployment-${routeTablename}'
+// Naming conventions module
+module naming '.shared/naming_conventions.bicep' = {
+  name: 'naming'
   params: {
-
-    name: routeTablename
-    location: location.region
-    routes: [
-      {
-        name: 'Traffic_to_LB'
-        properties: {
-          addressPrefix: '0.0.0.0/0'
-          nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: location.nextHopIp
-        }
-      }
-    ]
+    projectName: projectName
+    regionAbbreviation: regionAbbreviation
+    subscriptionName: subscription().displayName
   }
 }
 
+var vNetName = naming.outputs.vNet
+
+var vNetFullName = 'vnet-${vNetDescription}-${regionAbbreviation}'
+
 //Deploy Vnet
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.0' = {
-  name: 'vnetDeployment-${spokeVNet}'
   params: {
-    addressPrefixes: vNetAddressSpace
-    name: spokeVNet
+    addressPrefixes: [
+      vNetAddressSpace
+    ]
+    name: vNetFullName
+    //name: naming.outputs.vNet
     location: location.region
     dnsServers: location.dnsServers
-    subnets: [
-      for (subnet, index) in subnetsDefinitions: {
-        name: subnet.name
-        addressPrefix: subnet.addressPrefix
-        delegation: subnet.?delegation
-        networkSecurityGroupResourceId: networkSecurityGroup[index].outputs.resourceId
-        routeTableResourceId: routeTable.outputs.resourceId
-      }
-    ]
     // Configure hub-and-spoke peering
     peerings: [
       {
-        name: 'peering-${vNetDescription}-${regionAbbreviation}-fortigate_int-${regionAbbreviation}'
-        remotePeeringName: 'peering-fortigate_int-${regionAbbreviation}-${vNetDescription}-${regionAbbreviation}' 
+        name: 'peering-${vNetName}-fortigate_int-${regionAbbreviation}'
+        remotePeeringName: 'peering-fortigate_int-${regionAbbreviation}-${vNetName}' 
         allowForwardedTraffic: true
         allowGatewayTransit: false
         allowVirtualNetworkAccess: true
@@ -135,3 +53,5 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.0' = {
     ]
   }
 }
+output vNetName string = vNetName
+output subnetID array = virtualNetwork.outputs.subnetResourceIds
