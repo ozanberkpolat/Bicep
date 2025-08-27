@@ -32,10 +32,12 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.ManagedDevOpsPool
+
 // Deploy Managed DevOps Pool
 module Create_MDP 'br/public:avm/res/dev-ops-infrastructure/pool:0.7.0' = {
   params: {
-    name: naming.outputs.ManagedDevOpsPool
+    name: Name
     agentProfile: {
       maxAgentLifetime: '7.00:00:00'
       gracePeriodTimeSpan: '7.00:00:00'

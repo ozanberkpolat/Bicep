@@ -37,6 +37,12 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.databricksWorkspace
+var PE_API = naming.outputs.privateEndpoints.pe_dbw_api
+var PE_AUTH = naming.outputs.privateEndpoints.pe_dbw_auth
+var NIC_API = naming.outputs.NICs.pe_dbw_api_nic
+var NIC_AUTH = naming.outputs.NICs.pe_dbw_auth_nic
+
 // Create managed resource group
 module Create_DataRG 'br/public:avm/res/resources/resource-group:0.4.1' = {
   scope: subscription(subscriptionId)
@@ -95,7 +101,7 @@ module Create_DWHPublicSubnet 'br/public:avm/res/network/virtual-network/subnet:
 module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
   scope: resourceGroup(dataResourceGroup)
   params: {
-    name: naming.outputs.databricksWorkspace
+    name: Name
     location: location.region
     customPrivateSubnetName: PrivateSubnetName
     customPublicSubnetName: PublicSubnetName
@@ -115,7 +121,8 @@ module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
         }
         service: PEServices.databricks_ui_api.service
         subnetResourceId: PEsubNetId
-        name: naming.outputs.pe_dbw_api
+        name: PE_API
+        customNetworkInterfaceName: NIC_API
       }
       {
         privateDnsZoneGroup: {
@@ -127,7 +134,8 @@ module Create_DBW 'br/public:avm/res/databricks/workspace:0.11.2' = {
         }
         service: PEServices.databricks_browser_authentication.service
         subnetResourceId: PEsubNetId
-        name: naming.outputs.pe_dbw_auth
+        name: PE_AUTH
+        customNetworkInterfaceName: NIC_AUTH
       }
     ]
   }

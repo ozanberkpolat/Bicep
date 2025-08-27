@@ -8,6 +8,8 @@ param regionAbbreviation regionType
 param projectName string
 param subnetAddressSpace string
 param vNetAddressSpace string
+param vNetName string
+param subnetDescription string
 
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation)
@@ -21,11 +23,16 @@ module naming '.shared/naming_conventions.bicep' = {
     subscriptionName: subscription().displayName
   }
 }
+// Variables for naming conventions
+var vNetShortName = split(vNetName, '-')[1]
+var SubNetFullName = 'sn-${vNetShortName}-${subnetDescription}-${regionAbbreviation}'
+
+var Name = 'nsg-${SubNetFullName}'
 
 // Deploy NSG
 module nsg 'br/public:avm/res/network/network-security-group:0.5.1' = {
   params: {
-    name: naming.outputs.NSGName
+    name: Name
     location: location.region
     securityRules: [
       {

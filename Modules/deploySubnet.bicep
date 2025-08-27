@@ -20,6 +20,8 @@ var location regionDefinitionType = getLocation(regionAbbreviation)
 var vNetShortName = split(vNetName, '-')[1]
 var SubNetFullName = 'sn-${vNetShortName}-${subnetDescription}-${regionAbbreviation}'
 
+var NSGName = 'nsg-${SubNetFullName}'
+
 
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
@@ -34,7 +36,7 @@ module naming '.shared/naming_conventions.bicep' = {
 // Deploy NSG
 module NSG 'br/public:avm/res/network/network-security-group:0.5.1' = {
   params: {
-    name: naming.outputs.NSGName
+    name: NSGName
     location: location.region
     securityRules: [
       {

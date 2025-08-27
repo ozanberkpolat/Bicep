@@ -8,7 +8,7 @@ param regionAbbreviation regionType
 param VMName string
 param TypeofOS OSType
 param SizeOfVM vmSizeType
-param subNetId string
+param peSubnetResourceId string
 
 // Importing shared resources and configurations
 var vmSize = loadJsonContent('.shared/vmSizes.json')
@@ -52,7 +52,7 @@ module VM 'br/public:avm/res/compute/virtual-machine:0.17.0' = {
       {
         ipConfigurations: [
           {
-            subnetResourceId: subNetId
+            subnetResourceId: peSubnetResourceId
             privateIPAllocationMethod: 'Dynamic'
             privateIPAddressVersion: 'IPv4'            
           }
@@ -69,6 +69,7 @@ module VM 'br/public:avm/res/compute/virtual-machine:0.17.0' = {
     osType: OS.type
     vmSize: vmSizeValue
     secureBootEnabled: true
+    encryptionAtHost: true
     computerName: VMName
     imageReference: imageReference
     publicNetworkAccess: 'Disabled'

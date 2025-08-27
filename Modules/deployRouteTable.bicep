@@ -20,6 +20,8 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.routeTable
+
 // Default Route for the RT
 var defaultRoute = [
   {
@@ -35,7 +37,7 @@ var defaultRoute = [
 // Deploy Route Table
 module Route_Table 'br/public:avm/res/network/route-table:0.4.1' = {
   params: {
-    name: naming.outputs.routeTable
+    name: Name
     location: location.region
     routes: defaultRoute
   }

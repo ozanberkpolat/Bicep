@@ -22,7 +22,7 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
-var vNetName = naming.outputs.vNet
+var vNetName = naming.outputs.Resources.vNet
 
 var vNetFullName = 'vnet-${vNetDescription}-${regionAbbreviation}'
 

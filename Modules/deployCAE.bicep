@@ -7,7 +7,6 @@ import { regionType, regionDefinitionType, getLocation } from '.shared/commonTyp
 param regionAbbreviation regionType
 param projectName string
 param infraSubnetId string
-param appInsightsConnectionString string
 param logAnalyticsWorkspaceId string
 @secure()
 param sharedKey string
@@ -29,9 +28,13 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.ContainerAppEnv
+var PE = naming.outputs.privateEndpoints.pe_cae
+var NIC = naming.outputs.NICs.pe_cae_nic
+
 module Deploy_CAE 'br/public:avm/res/app/managed-environment:0.11.3' = {
   params: {
-    name: naming.outputs.ContainerAppEnv
+    name: Name
     location: location.region
     publicNetworkAccess: 'Disabled'
     appLogsConfiguration: {
@@ -41,7 +44,6 @@ module Deploy_CAE 'br/public:avm/res/app/managed-environment:0.11.3' = {
         sharedKey: sharedKey
       }
     }
-    appInsightsConnectionString: appInsightsConnectionString
     internal: true
     managedIdentities: {
       systemAssigned: true
@@ -58,13 +60,14 @@ module Deploy_CAE 'br/public:avm/res/app/managed-environment:0.11.3' = {
   }
 }
 
-module PE 'br/public:avm/res/network/private-endpoint:0.11.0' = {
+module Private_Endpoint 'br/public:avm/res/network/private-endpoint:0.11.0' = {
   params: {
-    name: naming.outputs.pe_cae
+    name: PE
     subnetResourceId: peSubnetResourceId
+    customNetworkInterfaceName: NIC
     privateLinkServiceConnections: [
       {
-        name: naming.outputs.pe_cae
+        name: PE
         properties: {
           groupIds: ['managedEnvironments']
           privateLinkServiceId: Deploy_CAE.outputs.resourceId

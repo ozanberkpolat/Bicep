@@ -6,7 +6,7 @@ import { regionType, regionDefinitionType, getLocation } from '.shared/commonTyp
 // Parameters for the deployments
 param regionAbbreviation regionType
 param projectName string
-param privateEndpointSubnetID string
+param peSubnetResourceId string
 
 // Variables 
 var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
@@ -24,10 +24,15 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.keyVault
+var PE = naming.outputs.privateEndpoints.pe_keyVault
+var NIC = naming.outputs.NICs.pe_keyVault_nic
+
+
 // Deploy Key Vault with Private Endpoint
 module Key_Vault 'br/public:avm/res/key-vault/vault:0.13.1' = {
   params: {
-    name: naming.outputs.keyVault
+    name: Name
     location: location.region
     sku: 'standard'
     accessPolicies:[]
@@ -47,12 +52,12 @@ module Key_Vault 'br/public:avm/res/key-vault/vault:0.13.1' = {
     
     privateEndpoints: [
       {
-        subnetResourceId: privateEndpointSubnetID
-        name: naming.outputs.pe_keyVault
+        subnetResourceId: peSubnetResourceId
+        name: PE
         service: 'vault'
         ipConfigurations: []
-        privateLinkServiceConnectionName: naming.outputs.pe_keyVault
-        customNetworkInterfaceName: naming.outputs.pe_keyVault_nic
+        privateLinkServiceConnectionName: PE
+        customNetworkInterfaceName: NIC
         privateDnsZoneGroup: {
           privateDnsZoneGroupConfigs: [
             {

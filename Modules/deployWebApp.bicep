@@ -18,9 +18,6 @@ param storageAccountResourceId string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Assigning the name to a variable for general usage
-var WebAppName = (osType == 'Linux') ? naming.outputs.webAppLnx : naming.outputs.webApp
-
 // Other Variables
 var kind = (osType == 'Linux') ? 'app,linux' : 'app'
 var linuxFxVersion = '${toUpper(RuntimeStack)}|${RuntimeVersion}'
@@ -36,9 +33,13 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.webApp
+var PE = naming.outputs.privateEndpoints.pe_web
+var NIC = naming.outputs.NICs.pe_web_nic
+
 module WebApp 'br/public:avm/res/web/site:0.19.0' = {
   params: {
-    name: (osType == 'Linux') ? naming.outputs.webAppLnx : naming.outputs.webApp
+    name: Name
     location: location.region
     kind: kind
     serverFarmResourceId: appServicePlanId
@@ -48,12 +49,12 @@ module WebApp 'br/public:avm/res/web/site:0.19.0' = {
     }
     hostNameSslStates:[
       {
-        name: '${WebAppName}.azurewebsites.net'
+        name: '${Name}.azurewebsites.net'
         sslState: 'Disabled'
         hostType: 'Standard'
       }
       {
-        name: '${WebAppName}.scm.azurewebsites.net'
+        name: '${Name}.scm.azurewebsites.net'
         sslState: 'Disabled'
         hostType: 'Repository'
       }
@@ -93,10 +94,10 @@ module WebApp 'br/public:avm/res/web/site:0.19.0' = {
   privateEndpoints: [
     {
       
-      name: (osType == 'Linux') ? naming.outputs.pe_web_lnx : naming.outputs.pe_web
+      name: PE
       subnetResourceId: peSubnetResourceId
-      privateLinkServiceConnectionName: (osType == 'Linux') ? naming.outputs.webAppLnx : naming.outputs.webApp
-      customNetworkInterfaceName: (osType == 'Linux') ? naming.outputs.pe_web_lnx_nic : naming.outputs.pe_web_nic
+      privateLinkServiceConnectionName: PE
+      customNetworkInterfaceName: NIC
       privateDnsZoneGroup: {
         privateDnsZoneGroupConfigs: [
           {

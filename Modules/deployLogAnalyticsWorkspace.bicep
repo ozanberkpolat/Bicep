@@ -20,9 +20,11 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.logAnalyticsWorkspace
+
 module Log_Analytics_Workspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
   params: {
-    name: naming.outputs.logAnalyticsWorkspace
+    name: Name
     location: location.region
     dailyQuotaGb: -1
     skuName:'PerGB2018'

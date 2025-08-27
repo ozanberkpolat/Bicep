@@ -1,12 +1,14 @@
-// This module deploys an Azure Container Registry (ACR) with private endpoint connectivity
+// This module deploys a Route Table
 
 // Importing necessary types
-import { regionType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
+import { regionType, regionDefinitionType, SKUType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param regionAbbreviation regionType
 param projectName string
+param RedissubnetResourceId string
 param peSubnetResourceId string
+param sku SKUType
 
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
@@ -24,39 +26,42 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
-var Name = naming.outputs.resources.containerRegistry
-var PE = naming.outputs.privateEndpoints.pe_acr
-var NIC = naming.outputs.NICs.pe_acr_nic
+var Name = naming.outputs.Resources.redisCache
+var PE = naming.outputs.privateEndpoints.pe_redis
+var NIC = naming.outputs.NICs.pe_redis_nic
 
-// Azure Container Registry deployment
-module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
+module Redis 'br/public:avm/res/cache/redis:0.16.3' = {
   params: {
     name: Name
-    acrAdminUserEnabled: false
-    acrSku: 'Premium'
-    azureADAuthenticationAsArmPolicyStatus: 'enabled'
-    exportPolicyStatus: 'enabled'
     location: location.region
+    skuName: sku
     publicNetworkAccess: 'Disabled'
+    capacity: 1
+    disableAccessKeyAuthentication: true
+    minimumTlsVersion: '1.2'
+    managedIdentities: {
+      systemAssigned:true
+    }
+    redisVersion: '6'
+    subnetResourceId:RedissubnetResourceId
     privateEndpoints: [
       {
         subnetResourceId: peSubnetResourceId
         name: PE
+        service: 'vault'
+        ipConfigurations: []
+        privateLinkServiceConnectionName: PE
         customNetworkInterfaceName: NIC
-
         privateDnsZoneGroup: {
           privateDnsZoneGroupConfigs: [
             {
-              privateDnsZoneResourceId: PrivateDNSZones.acr.dnsZone
+              name: PrivateDNSZones.redis.configName
+              privateDnsZoneResourceId: PrivateDNSZones.redis.dnsZone
             }
           ]
+
         }
       }
     ]
-    quarantinePolicyStatus: 'disabled'
-    softDeletePolicyStatus: 'disabled'
-    softDeletePolicyDays: 7
-    trustPolicyStatus: 'enabled'
-    
   }
 }

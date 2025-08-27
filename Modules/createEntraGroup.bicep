@@ -1,3 +1,5 @@
+targetScope = 'tenant'
+
 // This module creates an Entra Group using the Microsoft Graph API v1.0
 
 // Extension: Microsoft Graph API v1.0
@@ -16,5 +18,4 @@ resource Entra_Group 'Microsoft.Graph/groups@v1.0' = {
   mailNickname: mailNickname
   securityEnabled: securityEnabled
   uniqueName: uniqueName
-  membershipRule: 'Static'
 }

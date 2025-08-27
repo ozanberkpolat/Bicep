@@ -5,8 +5,8 @@ import { regionType, storageAccountKind, regionDefinitionType, getLocation } fro
 // Parameters for the deployments
 @maxLength(18)
 param projectName string
-param vNetName string
 param vNetRG string
+param vNetName string
 param peSubnetName string
 
 @minLength(1)
@@ -23,7 +23,7 @@ var PrivateDNSZones = json(loadTextContent('.shared/privateDnsZones.json'))
 
 // Variables
 var storageAccountName = 'gun${projectName}${regionAbbreviation}'
-var subnetId = 'subscriptions/${subscription().subscriptionId}/resourceGroups/${vNetRG}/providers/Microsoft.Network/virtualNetworks/${vNetName}/subnets/${peSubnetName}'
+var subnetId = resourceId(vNetRG, 'Microsoft.Network/virtualNetworks/subnets', vNetName, peSubnetName)
 var groupIds = {
   blob: 'blob'
   file: 'file'
@@ -38,7 +38,7 @@ var endpointNames = {
 }
 
 // Deploy Storage Account
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-04-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   name: storageAccountName
   location: location.region
   sku: {
@@ -80,7 +80,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-04-01' = {
 var StorageAccountID string = storageAccount.id
 
 // Configure Blob Retention 
-resource storageAccountName_default 'Microsoft.Storage/storageAccounts/blobServices@2023-04-01' = {
+resource storageAccountName_default 'Microsoft.Storage/storageAccounts/blobServices@2025-01-01' = {
   parent: storageAccount
   name: 'default'
   properties: {
@@ -100,7 +100,7 @@ resource storageAccountName_default 'Microsoft.Storage/storageAccounts/blobServi
 }
 
 // Configure File Retention
-resource Microsoft_Storage_storageAccounts_fileServices_storageAccountName_default 'Microsoft.Storage/storageAccounts/fileServices@2023-04-01' = if (SAKind == 'FileStorage' || SAKind == 'StorageV2') {
+resource Microsoft_Storage_storageAccounts_fileServices_storageAccountName_default 'Microsoft.Storage/storageAccounts/fileServices@2025-01-01' = if (SAKind == 'FileStorage' || SAKind == 'StorageV2') {
   parent: storageAccount
   name: 'default'
   properties: {
@@ -118,7 +118,7 @@ resource Microsoft_Storage_storageAccounts_fileServices_storageAccountName_defau
 }
 
 // Deploy Private Endpoints
-resource privateEndpoints 'Microsoft.Network/privateEndpoints@2023-11-01' = [for svc in serviceEndpoints: {
+resource privateEndpoints 'Microsoft.Network/privateEndpoints@2024-07-01' = [for svc in serviceEndpoints: {
   name: endpointNames[svc]
   location: location.region
   properties: {
@@ -149,7 +149,7 @@ resource privateEndpoints 'Microsoft.Network/privateEndpoints@2023-11-01' = [for
 }]
 
 // Private DNS zone config
-resource privateDnsZoneGroups 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-11-01' = [for (svc, i) in serviceEndpoints: {
+resource privateDnsZoneGroups 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-07-01' = [for (svc, i) in serviceEndpoints: {
   parent: privateEndpoints[i]
   name: 'default'
   properties: {
@@ -166,4 +166,3 @@ resource privateDnsZoneGroups 'Microsoft.Network/privateEndpoints/privateDnsZone
 
 output ResourceId string = storageAccount.id
 output Name string = storageAccount.name
-

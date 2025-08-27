@@ -20,9 +20,11 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.managedIdentity
+
 module userAssignedManagedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.1' = {
   params: {
-    name: naming.outputs.managedIdentity
+    name: Name
     location: location.region
   }
 }

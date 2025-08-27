@@ -14,6 +14,15 @@ var location regionDefinitionType = getLocation(regionAbbreviation)
 
 // SKU Mapping Variable
 var skuMap = {
+  P0V3: {
+    tier: 'PremiumV3'
+    name: 'P0v3'
+    size: 'P0V3'
+    family: 'PV3'
+    kind: 'app'
+    elasticScaleEnabled: false
+    maximumElasticWorkerCount: 1
+  }
   P1V3: {
     tier: 'PremiumV3'
     name: 'P1v3'
@@ -27,6 +36,8 @@ var skuMap = {
 
 var skuConfig = skuMap[sku]
 
+var Name = naming.outputs.Resources.appServicePlan
+
 // Naming conventions module
 module naming '.shared/naming_conventions.bicep' = {
   name: 'naming'
@@ -39,7 +50,7 @@ module naming '.shared/naming_conventions.bicep' = {
 
 module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
   params: {
-    name: osType == 'Linux' ? naming.outputs.appServicePlanLnx : naming.outputs.appServicePlan
+    name: Name
     location: location.region
     skuName: skuConfig.name
     kind: skuConfig.kind

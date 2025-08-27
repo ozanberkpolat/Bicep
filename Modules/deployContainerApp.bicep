@@ -21,9 +21,11 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.ContainerApp
+
 module Container_App 'br/public:avm/res/app/container-app:0.18.1' = {
   params: {
-    name: naming.outputs.ContainerApp
+    name: Name
     containers:  [
       {
         name: 'helloworldcontainer'

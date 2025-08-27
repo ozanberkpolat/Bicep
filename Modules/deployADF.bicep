@@ -25,10 +25,16 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.dataFactory
+var PE_Portal = naming.outputs.privateEndpoints.pe_adf_portal
+var PE_ADF = naming.outputs.privateEndpoints.pe_adf_datafactory
+var NIC_Portal = naming.outputs.NICs.pe_adf_portal_nic
+var NIC_ADF = naming.outputs.NICs.pe_adf_datafactory_nic
+
 // Azure Data Factory deployment
 module Create_ADF 'br/public:avm/res/data-factory/factory:0.10.4' = {
   params:{
-    name: naming.outputs.dataFactoryName
+    name: Name
     location: location.region
     publicNetworkAccess: 'Disabled'
     managedIdentities: {
@@ -45,7 +51,8 @@ module Create_ADF 'br/public:avm/res/data-factory/factory:0.10.4' = {
         }
         service: PEServices.datafactory_datafactory.service
         subnetResourceId: PEsubNetId
-        name: naming.outputs.pe_adf_datafactory
+        name: PE_ADF
+        customNetworkInterfaceName:NIC_ADF
       }
       {
         privateDnsZoneGroup: {
@@ -57,7 +64,8 @@ module Create_ADF 'br/public:avm/res/data-factory/factory:0.10.4' = {
         }
         service: PEServices.datafactory_portal.service
         subnetResourceId: PEsubNetId
-        name: naming.outputs.pe_adf_portal
+        name: PE_Portal
+        customNetworkInterfaceName: NIC_Portal
       }
     ]
   }

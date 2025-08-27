@@ -21,9 +21,11 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.AppInsights
+
 module App_Insights 'br/public:avm/res/insights/component:0.6.0' = {
   params: {
-    name: naming.outputs.AppInsights
+    name: Name
     location: location.region
     workspaceResourceId: LogAnalyticsWorkspaceResourceId
     applicationType: 'web'

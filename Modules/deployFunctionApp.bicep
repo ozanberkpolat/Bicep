@@ -5,7 +5,7 @@ import { regionType, SitesOSType, RunTimeType, regionDefinitionType, getLocation
 
 // Parameters for the deployments
 param projectName string
-param peSubnetID string
+param peSubnetResourceId string
 param outboundSubnetID string
 param appServicePlanId string
 param storageAccountName string
@@ -19,8 +19,12 @@ param storageAccountResourceId string
 // Get the region definition based on the provided region parameter
 var location regionDefinitionType = getLocation(regionAbbreviation) 
 
-// Assigning the name to a variable for general usage
-var functionAppName = (osType == 'Linux') ? naming.outputs.functionAppLnx : naming.outputs.functionApp
+var Name = naming.outputs.Resources.functionApp
+var PE = naming.outputs.privateEndpoints.pe_func
+var NIC = naming.outputs.NICs.pe_func_nic
+
+// Assigning the name to a variable for general
+var functionAppName = Name
 
 // Other Variables
 var kind = (osType == 'Linux') ? 'functionapp,linux' : 'functionapp'
@@ -39,7 +43,7 @@ module naming '.shared/naming_conventions.bicep' = {
 
 module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
   params: {
-    name: (osType == 'Linux') ? naming.outputs.functionAppLnx : naming.outputs.functionApp
+    name: Name
     location: location.region
     kind: kind
     serverFarmResourceId: appServicePlanId
@@ -79,7 +83,8 @@ module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
     siteConfig: {
       numberOfWorkers: 1
       linuxFxVersion: (osType == 'Linux') ? linuxFxVersion : ''
-      netFrameworkVersion: RuntimeVersion
+      netFrameworkVersion: (RuntimeStack == 'Dotnet') ? RuntimeVersion : ''
+      powerShellVersion: (RuntimeStack == 'Powershell') ? RuntimeVersion : ''
       acrUseManagedIdentityCreds: false
       alwaysOn: true
       http20Enabled: false
@@ -95,7 +100,7 @@ module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: toLower(RuntimeStack)
+          value: (RuntimeStack == 'Dotnet') ? 'dotnet-isolated' : toLower(RuntimeStack)
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
@@ -108,10 +113,10 @@ module FunctionApp 'br/public:avm/res/web/site:0.19.0' = {
   privateEndpoints: [
     {
       
-      name: (osType == 'Linux') ? naming.outputs.pe_func_lnx : naming.outputs.pe_func
-      subnetResourceId: peSubnetID
-      privateLinkServiceConnectionName: (osType == 'Linux') ? naming.outputs.functionAppLnx : naming.outputs.functionApp
-      customNetworkInterfaceName: (osType == 'Linux') ? naming.outputs.pe_func_lnx_nic : naming.outputs.pe_func_nic
+      name: PE
+      subnetResourceId: peSubnetResourceId
+      privateLinkServiceConnectionName: PE
+      customNetworkInterfaceName: NIC
       privateDnsZoneGroup: {
         privateDnsZoneGroupConfigs: [
           {

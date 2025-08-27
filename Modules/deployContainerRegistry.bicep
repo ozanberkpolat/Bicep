@@ -24,9 +24,13 @@ module naming '.shared/naming_conventions.bicep' = {
   }
 }
 
+var Name = naming.outputs.Resources.containerRegistry
+var PE = naming.outputs.privateEndpoints.pe_acr
+var NIC = naming.outputs.NICs.pe_acr_nic
+
 module ContainerRegistry 'br/public:avm/res/container-registry/registry:0.9.2' = {
   params: {
-    name: naming.outputs.containerRegistry
+    name: Name
     location:location.region
     dataEndpointEnabled: false
     publicNetworkAccess: 'Disabled'
@@ -47,11 +51,11 @@ module ContainerRegistry 'br/public:avm/res/container-registry/registry:0.9.2' =
     privateEndpoints: [
       {
         subnetResourceId: peSubnetResourceId
-        name: naming.outputs.pe_acr
+        name: PE
         service: 'registry'
         ipConfigurations: []
-        privateLinkServiceConnectionName: naming.outputs.pe_acr
-        customNetworkInterfaceName: naming.outputs.pe_acr_nic
+        privateLinkServiceConnectionName: PE
+        customNetworkInterfaceName: NIC
         privateDnsZoneGroup: {
           privateDnsZoneGroupConfigs: [
             {
