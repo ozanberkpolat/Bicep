@@ -5,12 +5,12 @@ import { regionType, SKUType } from '../../../modules/.shared/commonTypes.bicep'
 param regionAbbreviation regionType
 param projectName string
 param ServiceBusSKU SKUType
-param deploymentRG string = 'rg-mdmdev-profisee-swn'
-param vNetRG string = 'rg-vnet-mdmdev-swn'
+param deploymentRG string
+param vNetRG string
 
 resource Existing_VNET 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   scope: resourceGroup(vNetRG)
-  name: 'vnet-mdmdev-swn'
+  name: 'VNET_NAME'
 }
 
 resource Existing_Subnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' existing = {

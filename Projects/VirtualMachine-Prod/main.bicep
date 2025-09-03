@@ -1,24 +1,31 @@
+targetScope = 'subscription'
+import { OSType, vmSizeType } from '../../../modules/.shared/commonTypes.bicep'
 
-import { regionType } from '../../../modules/.shared/commonTypes.bicep'
-import { OSType } from '../../../modules/.shared/commonTypes.bicep'
-import { vmSizeType } from '../../modules/.shared/commonTypes.bicep'
-param SizeOfVM vmSizeType
-param TypeofOS OSType
-param VMName string
-param regionAbbreviation regionType
-param subnetName string
+param VMSize vmSizeType
+param OS OSType
+param regionAbbreviation string = 'usc'
+param VMName string 
 param vNetRG string
-param vNetName string
+param deploymentRG string 
 
 
-module DeployVM '../../../modules/deployVM.bicep' = {
+resource Existing_Vnet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
+  scope: resourceGroup(vNetRG)
+  name: 'vnet-commonit-usc'
+}
+
+resource Existing_Subnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' existing = {
+  name: 'sn-commonit-solarwinds-usc'
+  parent: Existing_Vnet
+}
+
+module VM '../../../modules/deployVM.bicep' = {
+  scope: resourceGroup(deploymentRG)
   params: {
-    SizeOfVM: SizeOfVM
-    TypeofOS: TypeofOS
+    SizeOfVM: VMSize
+    TypeofOS: OS
     VMName: VMName
+    peSubnetResourceId: Existing_Subnet.id
     regionAbbreviation: regionAbbreviation
-    subnetName: subnetName
-    vNetRG: vNetRG
-    vNetName: vNetName
   }
 }
