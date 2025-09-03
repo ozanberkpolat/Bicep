@@ -12,6 +12,7 @@ var appServicePlan                = 'plan-${normalizedSubscriptionName}-${projec
 var ContainerApp                  = 'ca-${normalizedSubscriptionName}-${projectName}-${regionAbbreviation}'
 var ContainerAppEnv               = 'cae-${normalizedSubscriptionName}-${projectName}-${regionAbbreviation}'
 var containerRegistry             = toLower('cr${projectName}${regionAbbreviation}')
+var CosmosDb                      = 'cdb-${normalizedSubscriptionName}-${projectName}-${regionAbbreviation}'
 var dataFactory                   = 'adf-${normalizedSubscriptionName}-${projectName}-${regionAbbreviation}'
 var databricksWorkspace           = 'dbw-${normalizedSubscriptionName}-${projectName}-${regionAbbreviation}'
 var functionApp                   = 'func-${normalizedSubscriptionName}-${projectName}-${regionAbbreviation}'
@@ -35,12 +36,13 @@ var pe_adf_portal                 = '${dataFactory}-portal-${regionAbbreviation}
 var pe_blob                       = 'pe-${storageAccount}-blob-${regionAbbreviation}'
 var pe_ca                         = 'pe-${ContainerApp}'
 var pe_cae                        = 'pe-${ContainerAppEnv}'
+var pe_cdb                        = 'pe-${CosmosDb}'
 var pe_dbw_api                    = 'pe-dbw-${projectName}-api-${regionAbbreviation}'
 var pe_dbw_auth                   = 'pe-dbw-${projectName}-auth-${regionAbbreviation}'
 var pe_file                       = 'pe-${storageAccount}-file-${regionAbbreviation}'
 var pe_func                       = 'pe-${functionApp}'
 var pe_keyVault                   = 'pe-${keyVault}'
-var pe_logicApp                   = 'pe${logicApp}'
+var pe_logicApp                   = 'pe-${logicApp}'
 var pe_queue                      = 'pe-${storageAccount}-queue-${regionAbbreviation}'
 var pe_redis                      = 'pe-${redisCache}'
 var pe_servicebus                 = 'pe-${ServiceBus}'
@@ -55,6 +57,7 @@ var pe_adf_portal_nic             = '${pe_adf_portal}-nic'
 var pe_blob_nic                   = '${pe_blob}-nic'
 var pe_ca_nic                     = '${pe_ca}-nic'
 var pe_cae_nic                    = '${pe_cae}-nic'
+var pe_cdb_nic                    = '${pe_cdb}-nic'
 var pe_dbw_api_nic                = '${pe_dbw_api}-nic'
 var pe_dbw_auth_nic               = '${pe_dbw_auth}-nic'
 var pe_file_nic                   = '${pe_file}-nic'
@@ -77,6 +80,7 @@ type Resources = {
   ContainerApp: string
   ContainerAppEnv: string
   containerRegistry: string
+  CosmosDb:string
   dataFactory: string
   databricksWorkspace: string
   functionApp: string
@@ -101,6 +105,7 @@ type PrivateEndpoints = {
   pe_blob: string
   pe_ca: string
   pe_cae: string
+  pe_cdb: string
   pe_dbw_api: string
   pe_dbw_auth: string
   pe_file: string
@@ -122,6 +127,7 @@ type NICs = {
   pe_blob_nic: string
   pe_ca_nic: string
   pe_cae_nic: string
+  pe_cdb_nic: string
   pe_dbw_api_nic: string
   pe_dbw_auth_nic: string
   pe_file_nic: string
@@ -146,6 +152,7 @@ output Resources Resources = {
   ContainerApp: ContainerApp
   ContainerAppEnv: ContainerAppEnv
   containerRegistry: containerRegistry
+  CosmosDb: CosmosDb
   dataFactory: dataFactory
   databricksWorkspace: databricksWorkspace
   functionApp: functionApp
@@ -170,6 +177,7 @@ output privateEndpoints PrivateEndpoints = {
   pe_blob: pe_blob
   pe_ca: pe_ca
   pe_cae: pe_cae
+  pe_cdb: pe_cdb
   pe_dbw_api: pe_dbw_api
   pe_dbw_auth: pe_dbw_auth
   pe_file: pe_file
@@ -191,6 +199,7 @@ output NICs NICs = {
   pe_blob_nic: pe_blob_nic
   pe_ca_nic: pe_ca_nic
   pe_cae_nic: pe_cae_nic
+  pe_cdb_nic: pe_cdb_nic
   pe_dbw_api_nic: pe_dbw_api_nic
   pe_dbw_auth_nic: pe_dbw_auth_nic
   pe_file_nic: pe_file_nic
