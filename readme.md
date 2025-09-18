@@ -26,8 +26,11 @@ module storage 'Modules/deployStorageAccount.bicep' = {
   }
 }
 ```
-
 Ensure shared definitions from `.shared/` are included where necessary.
+
+## 🚀 Deployment
+
+Markdown files have been created under each project
 
 ## 📦 Prerequisites
 
