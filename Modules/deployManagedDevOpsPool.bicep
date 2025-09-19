@@ -1,7 +1,7 @@
 // This module deploys Managed DevOps Pool
 
 // Importing necessary types
-import { regionType, OSType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
+import { regionType, MDP_OSType, regionDefinitionType, getLocation } from '.shared/commonTypes.bicep'
 
 // Parameters for the deployments
 param projectName string
@@ -9,8 +9,9 @@ param regionAbbreviation regionType
 param NumberOfAgents int
 param OrganizationName string
 param AZDO_ProjectName string
+param MDPSubnetResourceId string
 param VMSize string
-param OS OSType
+param OS MDP_OSType
 param ProjectID string
 
 // Importing shared resources and configurations
@@ -39,6 +40,20 @@ module Create_MDP 'br/public:avm/res/dev-ops-infrastructure/pool:0.7.0' = {
   params: {
     name: Name
     agentProfile: {
+      resourcePredictions: {
+        daysData: {
+          weekDaysScheme: {
+            endAgentCount: 0
+            endTime: '18:00:00'
+            startAgentCount: 2
+            startTime: '08:00:00'
+          }
+        }
+        timeZone: 'UTC'
+      }
+      resourcePredictionsProfile: {
+        kind: 'Manual'
+      }
       maxAgentLifetime: '7.00:00:00'
       gracePeriodTimeSpan: '7.00:00:00'
       kind: 'Stateful'
@@ -72,7 +87,7 @@ module Create_MDP 'br/public:avm/res/dev-ops-infrastructure/pool:0.7.0' = {
       ]
     osDiskStorageAccountType:'Standard'
     }
-
+    subnetResourceId: MDPSubnetResourceId
     organizationProfile: {
       organizations: [
         {
