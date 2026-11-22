@@ -7,6 +7,8 @@ param regionAbbreviation string = 'usc'
 param VMName string 
 param vNetRG string
 param deploymentRG string 
+@secure()
+param adminPassword string
 
 
 resource Existing_Vnet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
@@ -27,5 +29,6 @@ module VM '../../../modules/deployVM.bicep' = {
     VMName: VMName
     peSubnetResourceId: Existing_Subnet.id
     regionAbbreviation: regionAbbreviation
+    adminPassword: adminPassword
   }
 }

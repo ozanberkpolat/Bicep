@@ -9,6 +9,8 @@ param VMName string
 param TypeofOS OSType
 param SizeOfVM vmSizeType
 param peSubnetResourceId string
+@secure()
+param adminPassword string
 
 // Importing shared resources and configurations
 var vmSize = loadJsonContent('.shared/vmSizes.json')
@@ -59,7 +61,7 @@ module VM 'br/public:avm/res/compute/virtual-machine:0.17.0' = {
         ]
       }
     ]
-    adminPassword: 'P@ssw0rd1234!'
+    adminPassword: adminPassword
     osDisk:{
       managedDisk: {}
     }

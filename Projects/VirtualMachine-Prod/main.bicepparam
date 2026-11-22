@@ -6,4 +6,4 @@ param regionAbbreviation = 'usc'
 param VMName
 param vNetRG
 param deploymentRG
-
+param adminPassword = readEnvironmentVariable('VM_LOCAL_ADMIN_PASSWORD')
