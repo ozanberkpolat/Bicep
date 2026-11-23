@@ -7,9 +7,32 @@
     "version": "latest"
   },
   "Windows Server 2022": {
-    "resourceId": "CUSTOM-GALLERY-IMAGE-RESOURCE-ID-HERE"
+    "resourceId": "CUSTOM-GALLERY-IMAGE-RESOURCE-ID-HERE",
+    "type": "Windows"
   },
   "Windows Server 2019": {
-    "resourceId": "CUSTOM-GALLERY-IMAGE-RESOURCE-ID-HERE"
+    "resourceId": "CUSTOM-GALLERY-IMAGE-RESOURCE-ID-HERE",
+    "type": "Windows"
+  },
+  "Windows Server 2025": {
+    "type": "Windows",
+    "publisher": "MicrosoftWindowsServer",
+    "offer": "WindowsServer",
+    "sku": "2025-datacenter-azure-edition",
+    "version": "latest"
+  },
+  "Ubuntu 24.04": {
+    "type": "Linux",
+    "publisher": "Canonical",
+    "offer": "ubuntu-24_04-lts",
+    "sku": "server",
+    "version": "latest"
+  },
+  "RHEL 10": {
+    "type": "Linux",
+    "publisher": "RedHat",
+    "offer": "RHEL",
+    "sku": "10_2-gen2",
+    "version": "latest"
   }
 }

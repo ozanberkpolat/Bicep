@@ -1,0 +1,10 @@
+using './main.bicep'
+
+param orgPrefix = 'contoso'
+param location = 'westeurope'
+param environmentName = 'prod'
+param costCenter = 'CC-001'
+param ownerTeam = 'Cloud Platform Team'
+param ownerEmail = 'cloudteam@contoso.com'
+param changeTicket = 'CHG-0001'
+param deployedBy = 'platform-team'
