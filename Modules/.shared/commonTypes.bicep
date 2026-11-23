@@ -23,7 +23,7 @@ type webAppDefinition = {
 }
 
 @export()
-type OSType = 'Linux' | 'Windows Server 2022' | 'Windows Server 2019' | 'Windows'
+type OSType = 'Linux' | 'Windows Server 2022' | 'Windows Server 2019' | 'Windows' | 'Windows Server 2025' | 'Ubuntu 24.04' | 'RHEL 10'
 
 @export()
 type vmSizeType = 'small' | 'medium' | 'large' | 'xlarge' | '2xlarge' | '4xlarge'

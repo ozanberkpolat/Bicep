@@ -47,3 +47,27 @@ This repo is actively maintained and used for deploying Azure workloads using mo
 Maintained by [ozanberkpolat](https://github.com/ozanberkpolat)
 
 
+
+## Wave 2 additions
+
+### New modules (`Modules/`)
+
+| File | What it does |
+|---|---|
+| `deployVM.bicep` (extended) | Generic VM on AVM. `adminUsername` is now required. Optional: Trusted Launch, data disks, static IP, SSH key, maintenance configuration, backup enrolment, DCR association, Windows Server 2025 / Ubuntu 24.04 / RHEL 10 images. |
+| `deployVMStaticNic.bicep` | VM plus NIC as plain resources: static IP, Trusted Launch, Hybrid Benefit, data disks, random unknown admin password by default. |
+| `deployAvdHostPool.bicep` | AVD host pool, app group (Desktop or RemoteApp), workspace, RemoteApps, user assignment, diagnostics. |
+| `deployAvdSubnet.bicep` | AVD subnet in an existing VNet with the standard AVD NSG and an optional route table to an NVA. |
+| `deployAvdSessionHost.bicep` | Entra-joined AVD session hosts registered in an existing host pool. |
+| `deployVMInsightsDCR.bicep` | VM Insights data collection rule (InsightsMetrics) with optional VM associations. |
+| `deploySpokeVnet.bicep` | Spoke VNet, route table to an NVA, spoke-side hub peering. |
+| `deployHubSpokeLink.bicep` | Hub-side peering and routes to a new spoke in the hub route tables. |
+
+### New examples (`Projects/`)
+
+| Folder | What it shows |
+|---|---|
+| `AVD-HostPool` | Management plane, dedicated subnet and optional session hosts. |
+| `Identity-Prod` | User-assigned managed identities and RBAC at subscription and resource group scope. |
+| `ResourceOrganization-Prod` | Resource groups with naming, tagging and required-tag policy (subscription scope). |
+| `HubSpoke-Spoke` | Adding a spoke to an existing hub (both peering sides and the hub routes). |
