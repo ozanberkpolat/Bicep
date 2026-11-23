@@ -71,3 +71,5 @@ Maintained by [ozanberkpolat](https://github.com/ozanberkpolat)
 | `Identity-Prod` | User-assigned managed identities and RBAC at subscription and resource group scope. |
 | `ResourceOrganization-Prod` | Resource groups with naming, tagging and required-tag policy (subscription scope). |
 | `HubSpoke-Spoke` | Adding a spoke to an existing hub (both peering sides and the hub routes). |
+| `DomainLab` | Training domain lab: VNet, DC promoting a new forest by Run Command, joined member server, RDP from one source range, auto-shutdown. |
+| `AVD-RemoteApp-Lab` | RemoteApp host pool, workspace, lab VNet/subnet, Entra-joined session host, user assignment, auto-shutdown (uses the AVD modules). |
